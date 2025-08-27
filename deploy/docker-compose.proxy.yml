@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:stable
+    container_name: awos-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./deploy/certs:/etc/letsencrypt
+      - ./deploy/www:/var/www/certbot
+    restart: unless-stopped
+
+  # Certbot is included as a helper to obtain / renew certificates using the webroot method.
+  # It is invoked manually (see README) so it doesn't run continuously. The container is kept
+  # simple here so you can run certbot commands against the same mounted webroot.
+  certbot:
+    image: certbot/certbot
+    container_name: awos-certbot
+    volumes:
+      - ./deploy/certs:/etc/letsencrypt
+      - ./deploy/www:/var/www/certbot
+    entrypoint: ""
+    restart: 'no'
+
+networks:
+  default:
+    name: awos-proxy-network

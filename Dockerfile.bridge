@@ -1,0 +1,27 @@
+# MQTT Bridge Dockerfile
+FROM node:18-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install --only=production mqtt
+
+# Copy bridge script
+COPY scripts/mqtt-bridge.js ./
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S bridge -u 1001
+
+# Set ownership
+RUN chown -R bridge:nodejs /app
+USER bridge
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ps aux | grep -v grep | grep node || exit 1
+
+# Start the bridge
+CMD ["node", "mqtt-bridge.js"]

@@ -1,0 +1,69 @@
+# AWOS Dashboard - MQTT Development Stack
+# This docker-compose file provides an MQTT broker and bridge for local development
+
+version: '3.8'
+
+services:
+  # Mosquitto MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: awos-mosquitto
+    ports:
+      - "1883:1883" # MQTT
+      - "9001:9001" # WebSocket
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "mosquitto_sub -h localhost -t '$$SYS/broker/uptime' -C 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MQTT Bridge Service
+  bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.bridge
+    container_name: awos-mqtt-bridge
+    environment:
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
+      - MQTT_TOPIC=awos/readings/#
+      - INGEST_URL=http://host.docker.internal:3000/api/ingest
+      - MQTT_CLIENT_ID=awos-bridge-docker
+      - MQTT_BRIDGE_RETRY=5
+      - MQTT_BRIDGE_RETRY_DELAY_MS=3000
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./mqtt-bridge.js:/app/mqtt-bridge.js:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "ps aux | grep -v grep | grep node" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: MQTT Web Client (for testing)
+  mqtt-web-client:
+    image: hivemq/hivemq-ce:latest
+    container_name: awos-hivemq-webclient
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseContainerSupport
+    restart: unless-stopped
+    profiles:
+      - web-client
+
+volumes:
+  mosquitto_data:
+  mosquitto_logs:
+
+
+networks:
+  default:
+    name: awos-mqtt-network
