@@ -15,7 +15,7 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
   },
-  // Fix for Windows path issues with special characters
+  // Cross-platform webpack configuration
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.watchOptions = {
