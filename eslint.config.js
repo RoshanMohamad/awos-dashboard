@@ -10,11 +10,14 @@ const compat = new FlatCompat({
 })
  
 const eslintConfig = [
+  // Apply Next.js config to all relevant files
   ...compat.config({
     extends: ['next/core-web-vitals'],
-    ignorePatterns: ['**/node_modules/**', '**/.next/**', '**/dist/**'],
   }),
+  
+  // Global configuration
   {
+    ignores: ['node_modules/**', '.next/**', 'dist/**', 'out/**'],
     linterOptions: {
       reportUnusedDisableDirectives: 'error'
     }
