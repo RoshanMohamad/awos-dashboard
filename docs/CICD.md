@@ -64,7 +64,7 @@ sudo chown $USER:$USER /srv/awos-dashboard
 
 # Clone your repository
 cd /srv/awos-dashboard
-git clone https://github.com/yourusername/awos-dashboard.git .
+git clone https://github.com/roshanmohamad/awos-dashboard.git .
 
 # Create environment file
 cp .env.example .env.production
@@ -132,7 +132,7 @@ docker compose -f docker-compose.prod.yml ps
 ### Health check:
 
 ```bash
-curl -f https://yourdomain.com/api/health
+curl -f https://roshanmohamad.github.io/awos-dashboard/api/health
 ```
 
 ## Rollback
@@ -190,7 +190,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 After deployment, update your ESP32 code to use the production endpoint:
 
 ```c
-const char* INGEST_URL = "https://yourdomain.com/api/ingest";
+const char* INGEST_URL = "https://roshanmohamad.github.io/awos-dashboard/api/ingest";
 ```
 
 The pipeline ensures your ESP32 can reliably send data to the deployed application with automatic failover and health monitoring.

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/yourusername/awos-dashboard:latest # Update with your actual GitHub username/repo
+    image: ghcr.io/RoshanMohamad/awos-dashboard:latest # Update with your actual GitHub username/repo
     container_name: awos-app-prod
     restart: unless-stopped
     env_file:
