@@ -279,7 +279,7 @@ export default function AboutPage() {
                 <p className="text-gray-600 mb-4">
                   Airport & Aviation Services (Sri Lanka) Private Limited (AASL)
                   is the premier provider of aviation services in Sri Lanka,
-                  responsible for managing and operating the country's main
+                  responsible for managing and operating the country main
                   international gateway.
                 </p>
                 <div className="space-y-2">

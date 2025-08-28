@@ -80,7 +80,7 @@ export function PWAConnectionStatus() {
           <Alert variant="destructive">
             <WifiOff className="h-4 w-4" />
             <AlertDescription>
-              You're now offline. Some features may not be available, but you
+              You are now offline. Some features may not be available, but you
               can still access cached data.
             </AlertDescription>
           </Alert>

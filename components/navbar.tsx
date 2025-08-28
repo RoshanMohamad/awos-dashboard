@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { SignInButton } from "@/components/auth/signin-button";
@@ -14,9 +15,9 @@ export default function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-40 bg-card border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-14 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
             <div className="w-9 h-9 rounded-md bg-accent flex items-center justify-center">
-              <img src="/placeholder-logo.svg" alt="logo" className="w-5 h-5" />
+              <Image src="/placeholder-logo.svg" alt="logo" width={20} height={20} className="w-5 h-5" />
+            </div>
             </div>
             <Link href="/" className="text-sm font-semibold">
               AWOS
@@ -68,8 +69,7 @@ export default function Navbar() {
 
             <SignInButton />
           </div>
-        </div>
-      </div>
+       
     </header>
   );
 }
