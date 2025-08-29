@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     image: ghcr.io/RoshanMohamad/awos-dashboard:latest # Update with your actual GitHub username/repo
