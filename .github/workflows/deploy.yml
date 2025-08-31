@@ -97,10 +97,7 @@ jobs:
             mkdir -p /srv/awos-dashboard
             cd /srv/awos-dashboard || exit 1
             if [ ! -d .git ]; then
-              git init
-              git remote add origin https://github.com/RoshanMohamad/awos-dashboard.git
-              git fetch origin
-              git checkout main
+              git clone https://github.com/RoshanMohamad/awos-dashboard.git .
             else
               git pull origin main
             fi
