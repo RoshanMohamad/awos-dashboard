@@ -98,7 +98,7 @@ jobs:
             sudo chown ubuntu:ubuntu /srv/awos-dashboard
             cd /srv/awos-dashboard || exit 1
             if [ ! -d .git ]; then
-              rm -rf /srv/awos-dashboard/*
+              find /srv/awos-dashboard -mindepth 1 -delete
               git clone https://github.com/RoshanMohamad/awos-dashboard.git .
             else
               git pull origin main
