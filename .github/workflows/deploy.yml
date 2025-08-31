@@ -95,7 +95,7 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             sudo mkdir -p /srv/awos-dashboard
-            sudo chown ${CHOWN_USER:-$(whoami)}:${CHOWN_GROUP:-$(whoami)} /srv/awos-dashboard
+            sudo chown ubuntu:ubuntu /srv/awos-dashboard
             cd /srv/awos-dashboard || exit 1
             if [ ! -d .git ]; then
               rm -rf /srv/awos-dashboard/*
