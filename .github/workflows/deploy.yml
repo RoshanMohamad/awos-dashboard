@@ -96,7 +96,14 @@ jobs:
           script: |
             mkdir -p /srv/awos-dashboard
             cd /srv/awos-dashboard || exit 1
-            git pull origin main
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin https://github.com/RoshanMohamad/awos-dashboard.git
+              git fetch origin
+              git checkout main
+            else
+              git pull origin main
+            fi
 
             # Create/update environment file
             cat > .env.production << EOF
