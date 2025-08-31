@@ -105,31 +105,6 @@ jobs:
               git pull origin main
             fi
 
-            # Create/update environment file
-            cat > .env.production << EOF
-            NODE_ENV=production
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
-            EOF
-
-            # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            # Pull latest image
-            docker compose -f docker-compose.prod.yml pull
-
-            # Deploy with zero-downtime
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-
-            # Clean up old images
-            docker system prune -af --filter "until=24h"
-
-            # Health check
-            sleep 10
-            curl -f http://localhost:3000/api/health || curl -f https://roshanmohamad.github.io/awos-dashboard/api/health
-
   # Optional: Deploy to staging environment
   deploy-staging:
     needs: build
