@@ -1,9 +1,13 @@
 # AWOS Dashboard
 
-[![Docker Image](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/RoshanMohamad/awos-dashboard)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licens## 🚀 Deployment
+
+### Vercel (Recommended)MIT)
 
 A comprehensive **Automated Weather Observation System (AWOS)** dashboard built with modern web technologies. This full-stack application collects, processes, and visualizes weather data from IoT sensors, providing real-time monitoring and historical analysis capabilities.
+
+**🚀 Easy Deployment**: Deploy instantly to [Vercel](./VERCEL_DEPLOYMENT.md) with one-click serverless deployment.
 
 ## ?? Features
 
@@ -28,8 +32,6 @@ A comprehensive **Automated Weather Observation System (AWOS)** dashboard built 
 - **Supabase Integration**: PostgreSQL database with real-time subscriptions
 - **API Routes**: RESTful endpoints for data ingestion and retrieval
 - **MQTT Bridge**: Connect IoT devices via MQTT protocol
-- **Docker Support**: Containerized deployment with Docker Compose
-- **CI/CD Pipeline**: GitHub Actions for automated testing and deployment
 
 ### IoT Integration
 
@@ -48,14 +50,14 @@ A comprehensive **Automated Weather Observation System (AWOS)** dashboard built 
 - **Device**: ESP32 with Arduino framework
 - **Sensors**: DHT22, BMP280, analog sensors
 
-- **Containerization**: Docker + Docker Compose
-- **CI/CD**: GitHub Actions
-- **Reverse Proxy**: Nginx
-- **SSL/TLS**: Let's Encrypt (Certbot)
-- **Monitoring**: Health checks + logging
-- Docker
-- Git
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm, pnpm, or yarn
 - Supabase account (for database)
+- Git
 
 ### 1. Clone and Install
 
@@ -263,76 +265,34 @@ Application health status:
 }
 ```
 
-## 🐳 Docker Deployment
+## � Deployment Options
 
-### Local Development
+### Option 1: Vercel (Recommended)
 
-```bash
-# Start all services
-docker-compose up -d
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/RoshanMohamad/awos-dashboard)
 
-# View logs
-docker-compose logs -f app
+**Simple, serverless deployment with automatic scaling:**
 
-# Stop services
-docker-compose down
-```
+- ✅ One-click deployment
+- ✅ Automatic deployments on push
+- ✅ Preview deployments for PRs
+- ✅ Global CDN & SSL included
+- ✅ Serverless functions
+- ✅ Custom domains
 
-### Production Deployment
+**Quick Setup**:
 
-1. **Build and push Docker image**:
-
+1. Click the deploy button above
+2. Connect your GitHub account
+3. Set environment variables:
    ```bash
-   docker build -t awos-dashboard .
-   docker tag awos-dashboard ghcr.io/yourusername/awos-dashboard:latest
-   docker push ghcr.io/yourusername/awos-dashboard:latest
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```
+4. Deploy!
 
-2. **Deploy with Docker Compose**:
-
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-3. **SSL/TLS Setup**:
-
-   ```bash
-   # Obtain certificates
-   docker run --rm -v "$(pwd)/deploy/certs:/etc/letsencrypt" \
-     -v "$(pwd)/deploy/www:/var/www/certbot" certbot/certbot \
-     certonly --webroot -w /var/www/certbot -d yourdomain.com
-
-   # Reload nginx
-   docker-compose -f docker-compose.prod.yml exec nginx nginx -s reload
-   ```
-
-## 🔄 CI/CD Pipeline
-
-The project includes a complete CI/CD pipeline using GitHub Actions:
-
-### Pipeline Stages
-
-1. **Test**: Lint and build verification
-2. **Build**: Docker image creation and registry push
-3. **Deploy**: Automated deployment to VPS
-
-### Setup Requirements
-
-- GitHub repository with Actions enabled
-- VPS with Docker and SSH access
-- Domain name with DNS pointing to VPS
-
-### Configuration
-
-Add these secrets to your GitHub repository:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_BASE_URL`
-- `VPS_HOST`
-- `VPS_USERNAME`
-- `VPS_SSH_KEY`
+📖 **Complete Guide**: [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
 
 ## 🧪 Testing
 
