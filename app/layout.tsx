@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { AuthProvider } from "@/contexts/auth-context";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
@@ -79,15 +80,17 @@ html {
       </head>
       <body>
         <ServiceWorkerRegistration />
-        <ThemeProvider attribute="class">
-          <AuthProvider>
-            <Navbar />
-            <div className="min-h-screen bg-background text-foreground pt-14">
-              {children}
-            </div>
-            <PWAInstallPrompt />
-          </AuthProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider attribute="class">
+            <AuthProvider>
+              <Navbar />
+              <div className="min-h-screen bg-background text-foreground pt-14">
+                {children}
+              </div>
+              <PWAInstallPrompt />
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

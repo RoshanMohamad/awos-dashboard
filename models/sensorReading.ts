@@ -3,11 +3,22 @@ import { ISensorReading, SensorReadingInput } from '@/types/sensorReading';
 
 export class SensorReadingModel {
     /**
+     * Helper method to get Supabase client with error handling
+     */
+    private static getSupabaseClient() {
+        const supabase = createAdminClient();
+        if (!supabase) {
+            throw new Error('Database not configured. Please set up Supabase environment variables.');
+        }
+        return supabase;
+    }
+
+    /**
      * Create a new sensor reading in the database
      */
     static async create(data: SensorReadingInput): Promise<ISensorReading> {
         try {
-            const supabase = createAdminClient();
+            const supabase = this.getSupabaseClient();
 
             const sensorData = {
                 station_id: data.stationId || 'VCBI',
@@ -93,7 +104,7 @@ export class SensorReadingModel {
      */
     static async createServerSide(data: SensorReadingInput | any): Promise<ISensorReading> {
         try {
-            const supabase = createAdminClient();
+            const supabase = this.getSupabaseClient();
 
             // Handle timestamp conversion (accept Date or string)
             let timestampISO: string;
@@ -194,7 +205,7 @@ export class SensorReadingModel {
         orderBy?: 'asc' | 'desc';
     } = {}): Promise<ISensorReading[]> {
         try {
-            const supabase = createAdminClient();
+            const supabase = this.getSupabaseClient();
             const {
                 stationId,
                 startTime,
@@ -272,7 +283,7 @@ export class SensorReadingModel {
      */
     static async findById(id: string): Promise<ISensorReading | null> {
         try {
-            const supabase = createAdminClient();
+            const supabase = this.getSupabaseClient();
 
             const { data: reading, error } = await supabase
                 .from('sensor_readings')
@@ -332,7 +343,7 @@ export class SensorReadingModel {
      */
     static async findLatest(stationId?: string): Promise<ISensorReading | null> {
         try {
-            const supabase = createAdminClient();
+            const supabase = this.getSupabaseClient();
 
             let query = supabase
                 .from('sensor_readings')

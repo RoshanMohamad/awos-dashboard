@@ -42,6 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const client = createClient();
       setSupabase(client);
+
+      // If client is null (no env vars), set loading to false immediately
+      if (!client) {
+        setLoading(false);
+      }
     }
   }, []);
 

@@ -14,30 +14,60 @@ export async function GET() {
 
         const supabase = createClient()
 
-        // Test connection and get basic stats
-        const { data: readings, error: readingsError } = await supabase
+        // Handle case where createClient returns null
+        if (!supabase) {
+            return NextResponse.json({
+                ok: false,
+                status: 'client-error',
+                error: 'Failed to create Supabase client'
+            }, { status: 503 })
+        }
+
+        // Simple connection test first - check if sensor_readings table exists
+        const { data: testData, error: testError } = await supabase
             .from('sensor_readings')
-            .select('id, timestamp, station_id')
+            .select('id')
             .limit(1)
 
-        if (readingsError) {
+        if (testError) {
+            // If sensor_readings table doesn't exist, that's expected for initial setup
+            if (testError.message.includes('relation "sensor_readings" does not exist') ||
+                testError.message.includes('table') ||
+                testError.code === 'PGRST116') {
+                return NextResponse.json({
+                    ok: true,
+                    status: 'connected-no-tables',
+                    database: 'PostgreSQL (Supabase)',
+                    platform: 'Supabase',
+                    message: 'Database connected but sensor_readings table not found. This is normal for initial setup.',
+                    stats: {
+                        totalReadings: 0,
+                        totalStations: 0,
+                        stations: [],
+                        earliestReading: null,
+                        latestReading: null
+                    }
+                })
+            }
+
+            // Other database errors
             return NextResponse.json({
                 ok: false,
                 status: 'disconnected',
-                error: `Database connection failed: ${readingsError.message}`
+                error: `Database connection failed: ${testError.message}`
             }, { status: 500 })
         }
 
-        // Get total count
+        // If table exists, get detailed stats
         const { count: totalReadings, error: countError } = await supabase
             .from('sensor_readings')
             .select('*', { count: 'exact', head: true })
 
-        // Get oldest and newest readings
+        // Get oldest and newest readings safely
         const [
-            { data: oldestReading },
-            { data: latestReading },
-            { data: stationIds }
+            { data: oldestReading, error: oldestError },
+            { data: latestReading, error: latestError },
+            { data: stationIds, error: stationsError }
         ] = await Promise.all([
             supabase
                 .from('sensor_readings')
@@ -53,14 +83,12 @@ export async function GET() {
                 .from('sensor_readings')
                 .select('station_id')
                 .order('station_id')
-        ]) as [
-                { data: { timestamp: string }[] },
-                { data: { timestamp: string }[] },
-                { data: { station_id: string }[] }
-            ]
+                .limit(100) // Limit to avoid too much data
+        ])
 
-        // Get unique station IDs
-        const uniqueStations = [...new Set(stationIds?.map(s => s.station_id) || [])]
+        // Handle any sub-query errors gracefully
+        const uniqueStations = stationsError ? [] :
+            [...new Set((stationIds as any[])?.map((s: any) => s.station_id).filter(Boolean) || [])]
 
         return NextResponse.json({
             ok: true,
@@ -71,8 +99,8 @@ export async function GET() {
                 totalReadings: totalReadings || 0,
                 totalStations: uniqueStations.length,
                 stations: uniqueStations,
-                earliestReading: oldestReading?.[0]?.timestamp || null,
-                latestReading: latestReading?.[0]?.timestamp || null
+                earliestReading: oldestError ? null : (oldestReading as any)?.[0]?.timestamp || null,
+                latestReading: latestError ? null : (latestReading as any)?.[0]?.timestamp || null
             }
         })
     } catch (err: any) {
