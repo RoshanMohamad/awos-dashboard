@@ -284,13 +284,23 @@ Application health status:
 
 1. Click the deploy button above
 2. Connect your GitHub account
-3. Set environment variables:
+3. **IMPORTANT**: Set environment variables in Vercel dashboard:
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
    ```
+   > ⚠️ **Build will fail without these variables**. Add them in Vercel Project Settings → Environment Variables
 4. Deploy!
+
+### Troubleshooting
+
+**Build Error: "supabaseUrl is required"**
+
+- Go to your Vercel project dashboard
+- Navigate to Settings → Environment Variables
+- Add the required Supabase environment variables
+- Redeploy from the Deployments tab
 
 📖 **Complete Guide**: [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
 

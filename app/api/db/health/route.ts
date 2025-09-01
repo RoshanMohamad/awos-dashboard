@@ -3,6 +3,15 @@ import { createClient } from '@/lib/supabase'
 
 export async function GET() {
     try {
+        // Check if environment variables are available
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+            return NextResponse.json({
+                ok: false,
+                status: 'not-configured',
+                error: 'Supabase environment variables not configured'
+            }, { status: 503 })
+        }
+
         const supabase = createClient()
 
         // Test connection and get basic stats
@@ -45,10 +54,10 @@ export async function GET() {
                 .select('station_id')
                 .order('station_id')
         ]) as [
-            { data: { timestamp: string }[] },
-            { data: { timestamp: string }[] },
-            { data: { station_id: string }[] }
-        ]
+                { data: { timestamp: string }[] },
+                { data: { timestamp: string }[] },
+                { data: { station_id: string }[] }
+            ]
 
         // Get unique station IDs
         const uniqueStations = [...new Set(stationIds?.map(s => s.station_id) || [])]

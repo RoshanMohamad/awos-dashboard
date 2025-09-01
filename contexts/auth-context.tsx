@@ -13,7 +13,7 @@ import type { Database } from "@/lib/supabase";
 type SupabaseClient = ReturnType<typeof createClient>;
 
 interface AuthContextType {
-  supabase: SupabaseClient;
+  supabase: SupabaseClient | null;
   user: User | null;
   session: Session | null;
   loading: boolean;
@@ -35,18 +35,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
 
-  const supabase = createClient();
+  // Initialize Supabase client only on the client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const client = createClient();
+      setSupabase(client);
+    }
+  }, []);
 
   useEffect(() => {
+    if (!supabase) return;
+
     // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.warn("Error getting session:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getInitialSession();
@@ -63,31 +77,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      return {
+        error: new Error("Supabase client not initialized") as AuthError,
+      };
+    }
+
     console.log("Attempting Google sign-in...");
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
         queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
+          access_type: "offline",
+          prompt: "consent",
         },
       },
     });
-    
+
     if (error) {
       console.error("Google OAuth error:", error);
     } else {
       console.log("Google OAuth initiated:", data);
     }
-    
+
     return { error };
   };
 
   const signInWithEmail = async (email: string, password: string) => {
+    if (!supabase) {
+      return {
+        error: new Error("Supabase client not initialized") as AuthError,
+      };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -96,6 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
+    if (!supabase) {
+      return {
+        error: new Error("Supabase client not initialized") as AuthError,
+      };
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -104,6 +136,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      return {
+        error: new Error("Supabase client not initialized") as AuthError,
+      };
+    }
+
     const { error } = await supabase.auth.signOut();
     return { error };
   };

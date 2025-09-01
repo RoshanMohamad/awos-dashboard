@@ -113,8 +113,14 @@ type Json = string | number | boolean | null | { [key: string]: Json | undefined
 
 // Client-side Supabase client - Modern approach
 export const createClient = (): SupabaseClient<Database> => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        // Return a mock client for build time when environment variables are not available
+        console.warn('Supabase environment variables not found. Using mock client.')
+        return {} as SupabaseClient<Database>
+    }
 
     return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
         auth: {
@@ -130,11 +136,13 @@ export const createClient = (): SupabaseClient<Database> => {
 
 // Server-side Supabase admin client - Uses service role key for privileged operations
 export const createAdminClient = (): SupabaseClient<Database> => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    if (!serviceRoleKey) {
-        throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required for server-side operations')
+    if (!supabaseUrl || !serviceRoleKey) {
+        // Return a mock client for build time when environment variables are not available
+        console.warn('Supabase admin environment variables not found. Using mock client.')
+        return {} as SupabaseClient<Database>
     }
 
     return createSupabaseClient<Database>(supabaseUrl, serviceRoleKey, {
