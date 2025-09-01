@@ -131,7 +131,7 @@ export const createClient = (): SupabaseClient<Database> | null => {
         db: {
             schema: 'public'
         }
-    })
+    }) as any
 }
 
 // Server-side Supabase admin client - Uses service role key for privileged operations
@@ -147,8 +147,8 @@ export const createAdminClient = (): SupabaseClient<Database> | null => {
 
     return createSupabaseClient<Database>(supabaseUrl, serviceRoleKey, {
         auth: {
-            autoRefreshToken: false,
-            persistSession: false,
+            autoRefreshToken: true,
+            persistSession: true,
         },
         db: {
             schema: 'public'

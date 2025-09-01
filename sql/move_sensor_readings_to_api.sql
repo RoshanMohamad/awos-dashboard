@@ -4,13 +4,13 @@
 BEGIN;
 
 -- Create schema if it doesn't exist
-CREATE SCHEMA IF NOT EXISTS api;
+CREATE SCHEMA IF NOT EXISTS public;
 
 -- Move table
-ALTER TABLE IF EXISTS public.sensor_readings SET SCHEMA api;
+ALTER TABLE IF EXISTS public.sensor_readings SET SCHEMA public;
 
 -- If you have related sequences (serial PKs), move them too
--- Example: ALTER SEQUENCE IF EXISTS public.sensor_readings_id_seq SET SCHEMA api;
+-- Example: ALTER SEQUENCE IF EXISTS public.sensor_readings_id_seq SET SCHEMA public;
 
 COMMIT;
 
