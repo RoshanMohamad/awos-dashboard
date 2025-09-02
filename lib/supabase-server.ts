@@ -26,8 +26,8 @@ export const createSupabaseAdminClient = () => {
 
     return createSupabaseClient<Database>(supabaseUrl, supabaseServiceKey, {
         auth: {
-            autoRefreshToken: false,
-            persistSession: false
+            autoRefreshToken: true,
+            persistSession: true
         }
     })
 }

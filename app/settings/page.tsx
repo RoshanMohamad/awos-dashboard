@@ -42,7 +42,7 @@ export default function SettingsPage() {
       compactView: false,
     },
     system: {
-      esp32Endpoint: "http://192.168.1.100",
+      esp32Endpoint: "http://192.168.8.160",
       apiTimeout: 5000,
       retryAttempts: 3,
       logLevel: "INFO",
@@ -333,7 +333,7 @@ export default function SettingsPage() {
                     system: { ...prev.system, esp32Endpoint: e.target.value },
                   }))
                 }
-                placeholder="http://192.168.1.100"
+                placeholder="http://192.168.8.160"
               />
               <div className="text-sm text-gray-500">
                 IP address or hostname of your ESP32 weather station

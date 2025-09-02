@@ -16,13 +16,13 @@ export function useESP32Data(runway: string) {
   const apiClient = useRef<ESP32ApiClient | null>(null)
   const fallbackInterval = useRef<NodeJS.Timeout | null>(null)
 
-  // Initialize clients
+  // Initialize clients - DISABLED for cloud deployment
   useEffect(() => {
-    wsClient.current = new ESP32WebSocketClient()
-    apiClient.current = new ESP32ApiClient()
+    // wsClient.current = new ESP32WebSocketClient()
+    // apiClient.current = new ESP32ApiClient()
 
     return () => {
-      wsClient.current?.disconnect()
+      // wsClient.current?.disconnect()
       if (fallbackInterval.current) {
         clearInterval(fallbackInterval.current)
       }
@@ -168,20 +168,20 @@ export function useESP32Data(runway: string) {
     }, 5000) // Poll every 5 seconds
   }, [runway])
 
-  // Setup WebSocket connection
+  // Setup WebSocket connection - DISABLED for cloud deployment
   useEffect(() => {
-    if (!wsClient.current) return
+    // if (!wsClient.current) return
 
-    wsClient.current.onData(handleSensorData)
-    wsClient.current.onAlert(handleAlert)
-    wsClient.current.onConnection(handleConnection)
+    // wsClient.current.onData(handleSensorData)
+    // wsClient.current.onAlert(handleAlert)
+    // wsClient.current.onConnection(handleConnection)
 
-    // Attempt WebSocket connection
-    wsClient.current.connect()
+    // // Attempt WebSocket connection
+    // wsClient.current.connect()
 
-    return () => {
-      wsClient.current?.disconnect()
-    }
+    // return () => {
+    //   wsClient.current?.disconnect()
+    // }
   }, [handleSensorData, handleAlert, handleConnection])
 
   // Manual data refresh
