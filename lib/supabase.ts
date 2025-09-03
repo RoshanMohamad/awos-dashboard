@@ -111,7 +111,7 @@ export interface Database {
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-// Client-side Supabase client - Modern approach
+// Client-side Supabase client - Modern approach with Realtime enabled
 export const createClient = (): SupabaseClient<Database> | null => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

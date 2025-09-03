@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Wifi, WifiOff } from "lucide-react";
-import { useESP32Data } from "@/hooks/use-esp32-data";
+import { useRealtimeSensorData } from "@/hooks/use-realtime-sensor-data";
 
 interface LiveDashboardProps {
   runway: string;
@@ -23,7 +23,7 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
     connectionError,
     lastUpdate,
     refreshData,
-  } = useESP32Data(runway);
+  } = useRealtimeSensorData(runway);
 
   useEffect(() => {
     const timer = setInterval(() => {
