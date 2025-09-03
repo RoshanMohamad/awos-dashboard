@@ -83,7 +83,7 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
       {/* Main Content - Fixed Height Layout with Flexbox */}
       <div
         className={`${
-          connectionError ? "h-[calc(100vh-360px)]" : "h-[calc(100vh-320px)]"
+          connectionError ? "h-[calc(100vh-160px)]" : "h-[calc(100vh-120px)]"
         } p-4 bg-gray-50 flex flex-col`}
       >
         <div className="flex-grow space-y-4">
