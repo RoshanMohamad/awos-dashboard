@@ -116,6 +116,13 @@ export const createClient = (): SupabaseClient<Database> | null => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+    // Debug logging
+    console.log('Environment check:', {
+        url: supabaseUrl ? 'SET' : 'NOT SET',
+        key: supabaseAnonKey ? 'SET' : 'NOT SET',
+        urlValue: supabaseUrl,
+    })
+
     if (!supabaseUrl || !supabaseAnonKey) {
         // Return null when environment variables are not available
         console.warn('Supabase environment variables not found. Authentication features will be disabled.')

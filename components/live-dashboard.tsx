@@ -83,10 +83,10 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
       {/* Main Content - Fixed Height Layout with Flexbox */}
       <div
         className={`${
-          connectionError ? "h-[calc(100vh-160px)]" : "h-[calc(100vh-120px)]"
+          connectionError ? "h-[calc(100vh-360px)]" : "h-[calc(100vh-320px)]"
         } p-4 bg-gray-50 flex flex-col`}
       >
-        <div className="flex-1 space-y-4">
+        <div className="flex-grow space-y-4">
           {/* Top Row - 60% of available height */}
           <div className="flex-grow grid grid-cols-12 gap-4 min-h-[300px]">
             {/* Wind Direction & Speed */}
@@ -598,7 +598,7 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
           </div>
 
           {/* Bottom Row - 38% of available height */}
-          <div className="h-full grid grid-cols-12 gap-4">
+          <div className="flex-grow grid grid-cols-12 gap-4 min-h-[100px]">
             {/* Temperature, Humidity, Dew Point */}
             <div className="col-span-9 grid grid-cols-3 gap-4">
               <Card className="h-full">
