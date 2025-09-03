@@ -46,7 +46,7 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
   };
 
   return (
-    <div className="h-full overflow-hidden bg-gray-50">
+    <div className="h-screen overflow-hidden bg-gray-50">
       {/* Connection Status Alert */}
       {connectionError && (
         <div className="p-2 bg-amber-50 border-b border-amber-200">
@@ -80,15 +80,15 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
         </div>
       )}
 
-      {/* Main Content - Fixed Height Layout with Flexbox */}
+      {/* Main Content - Fixed Height Layout with Proper Bottom Row Display */}
       <div
         className={`${
-          connectionError ? "h-[calc(100vh-160px)]" : "h-[calc(100vh-120px)]"
+          connectionError ? "h-[calc(100vh-60px)]" : "h-screen"
         } p-4 bg-gray-50 flex flex-col`}
       >
-        <div className="flex-grow space-y-4">
-          {/* Top Row - 60% of available height */}
-          <div className="flex-grow grid grid-cols-12 gap-4 min-h-[300px]">
+        <div className="h-full flex flex-col space-y-4">
+          {/* Top Row - Fixed height for gauges */}
+          <div className="h-[400px] grid grid-cols-12 gap-4">
             {/* Wind Direction & Speed */}
             <div className="col-span-4">
               <Card className="h-full">
@@ -597,8 +597,8 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
             </div>
           </div>
 
-          {/* Bottom Row - 38% of available height */}
-          <div className="flex-grow grid grid-cols-12 gap-4 min-h-[100px]">
+          {/* Bottom Row - Fixed height to ensure visibility */}
+          <div className="h-[200px] grid grid-cols-12 gap-4">
             {/* Temperature, Humidity, Dew Point */}
             <div className="col-span-9 grid grid-cols-3 gap-4">
               <Card className="h-full">
