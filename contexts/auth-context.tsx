@@ -92,10 +92,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     console.log("Attempting Google sign-in...");
+
+    // Use production URL in production, localhost in development
+    const redirectUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://awos-dashboard.vercel.app/dashboard"
+        : `${window.location.origin}/dashboard`;
+
+    console.log("OAuth redirect URL:", redirectUrl);
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: "offline",
           prompt: "consent",
