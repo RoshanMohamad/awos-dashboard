@@ -133,7 +133,7 @@ export function useESP32Data(runway: string) {
       // Start fallback API polling
       startFallbackPolling()
     }
-  }, [])
+  }, [runway])
 
   // Fallback API polling when WebSocket is unavailable
   const startFallbackPolling = useCallback(() => {
