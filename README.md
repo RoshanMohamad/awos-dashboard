@@ -1,15 +1,13 @@
 # AWOS Dashboard
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/RoshanMohamad/awos-dashboard)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licens## 🚀 Deployment
-
-### Vercel (Recommended)MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive **Automated Weather Observation System (AWOS)** dashboard built with modern web technologies. This full-stack application collects, processes, and visualizes weather data from IoT sensors, providing real-time monitoring and historical analysis capabilities.
 
-**🚀 Easy Deployment**: Deploy instantly to [Vercel](./VERCEL_DEPLOYMENT.md) with one-click serverless deployment.
+**🚀 Easy Deployment**: Deploy instantly to Vercel with one-click serverless deployment.
 
-## ?? Features
+## ✨ Features
 
 ### Core Functionality
 
@@ -28,23 +26,22 @@ A comprehensive **Automated Weather Observation System (AWOS)** dashboard built 
 - **Progressive Web App**: Installable PWA with offline capabilities
 - **Real-time Updates**: Server-Sent Events (SSE) for live data
 
+### Technology Stack
+
+#### Frontend
 - **Next.js 15**: App Router with TypeScript
 - **Supabase Integration**: PostgreSQL database with real-time subscriptions
 - **API Routes**: RESTful endpoints for data ingestion and retrieval
 - **MQTT Bridge**: Connect IoT devices via MQTT protocol
 
-### IoT Integration
-
-- **ESP32 Support**: Arduino sketch for sensor data collection
-- **Sensor Compatibility**: DHT22, BMP280, wind sensors, battery monitoring
-- **Network Resilience**: Offline queuing and retry mechanisms
-- **NTP Time Sync**: Accurate timestamping with network time protocol
-- **Database**: Supabase (PostgreSQL
+#### Backend
+- **Database**: Supabase (PostgreSQL)
 - **ORM**: Prisma (optional, for complex queries)
 - **Authentication**: Supabase Auth
 - **Real-time**: Server-Sent Events (SSE)
 - **Validation**: Zod schemas
 
+#### IoT Integration
 - **MQTT**: Eclipse Mosquitto broker
 - **HTTP Client**: Built-in fetch API
 - **Device**: ESP32 with Arduino framework
@@ -132,7 +129,6 @@ node scripts/generate-test-data.js
 
 1. **Install Arduino IDE** or **PlatformIO**
 2. **Install required libraries**:
-
    - WiFi
    - HTTPClient
    - ArduinoJson
@@ -140,7 +136,6 @@ node scripts/generate-test-data.js
    - Adafruit BMP280
 
 3. **Configure the device**:
-
    ```cpp
    const char* WIFI_SSID = "YOUR_WIFI_SSID";
    const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
@@ -227,7 +222,6 @@ Accepts sensor readings in JSON format:
 Retrieve sensor readings with optional filtering:
 
 Query parameters:
-
 - `stationId`: Filter by station
 - `startTime`: Start timestamp (ISO format)
 - `endTime`: End timestamp (ISO format)
@@ -265,9 +259,9 @@ Application health status:
 }
 ```
 
-## � Deployment Options
+## 🚀 Deployment
 
-### Option 1: Vercel (Recommended)
+### Vercel (Recommended)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/RoshanMohamad/awos-dashboard)
 
@@ -280,29 +274,13 @@ Application health status:
 - ✅ Serverless functions
 - ✅ Custom domains
 
-**Quick Setup**:
-
-1. Click the deploy button above
-2. Connect your GitHub account
-3. **IMPORTANT**: Set environment variables in Vercel dashboard:
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   ```
-   > ⚠️ **Build will fail without these variables**. Add them in Vercel Project Settings → Environment Variables
-4. Deploy!
-
 ### Troubleshooting
 
 **Build Error: "supabaseUrl is required"**
-
 - Go to your Vercel project dashboard
 - Navigate to Settings → Environment Variables
 - Add the required Supabase environment variables
 - Redeploy from the Deployments tab
-
-📖 **Complete Guide**: [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
 
 ## 🧪 Testing
 
@@ -317,18 +295,10 @@ npm run test
 
 ```bash
 # Test API endpoints
-curl -X POST -H "Content-Type: application/json" \
-  -d '{"temperature":25}' http://localhost:3000/api/ingest
+npm run test-api
 
 # Test health endpoint
 curl http://localhost:3000/api/health
-```
-
-### ESP32 Testing
-
-```bash
-# Monitor serial output
-# Check for WiFi connection, NTP sync, and HTTP POST success
 ```
 
 ## 🤝 Contributing
@@ -341,13 +311,6 @@ We welcome contributions! Please follow these steps:
 4. **Commit your changes**: `git commit -m 'Add amazing feature'`
 5. **Push to the branch**: `git push origin feature/amazing-feature`
 6. **Open a Pull Request**
-
-### Development Guidelines
-
-- Follow TypeScript best practices
-- Add tests for new features
-- Update documentation as needed
-- Use conventional commit messages
 
 ## 📝 License
 
@@ -364,7 +327,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 If you have questions or need help:
-
 - **Documentation**: Check the `docs/` directory
 - **Issues**: Open a GitHub issue
 - **Discussions**: Use GitHub Discussions for questions
@@ -373,3 +335,136 @@ If you have questions or need help:
 ---
 
 **Happy Weather Monitoring! 🌤️**
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
+```bash
+supabase bootstrap
+```
+
+Or using npx:
+
+```bash
+npx supabase bootstrap
+```
+
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
+```

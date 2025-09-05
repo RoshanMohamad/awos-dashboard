@@ -1,18 +1,19 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "awos-dashboard",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "generate-icons": "node scripts/generate-icons.js",
-    "pwa-dev": "next dev",
-    "pwa-build": "next build",
-    "seed-data": "node scripts/seed-sample-data.js",
-    "add-sample-data": "node scripts/add-sample-data.js",
-    "db-health": "node -e \"console.log('Testing database health...'); fetch('http://localhost:3001/api/db/health').then(r=>r.json()).then(console.log).catch(console.error)\""
+    "test": "node scripts/test-api.js",
+    "test-api": "node scripts/test-api.js",
+    "test-verbose": "node scripts/test-api.js --verbose",
+    "type-check": "tsc --noEmit",
+    "mqtt-bridge": "node scripts/mqtt-bridge-standalone.js",
+    "mqtt-bridge:dev": "MQTT_HOST=localhost API_BASE_URL=http://localhost:3000 node scripts/mqtt-bridge-standalone.js --verbose",
+    "mqtt-bridge:prod": "node scripts/mqtt-bridge-standalone.js --stats"
   },
   "dependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -50,7 +51,7 @@
     "@supabase/auth-helpers-react": "^0.5.0",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
-    "@supabase/supabase-js": "^2.56.0",
+    "@supabase/supabase-js": "^2.57.2",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -62,8 +63,9 @@
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "mqtt": "^5.14.0",
-    "next": "15.2.4",
+    "next": "^15.5.2",
     "next-themes": "^0.4.4",
+    "node-fetch": "^3.3.2",
     "react": "^19",
     "react-day-picker": "9.8.0",
     "react-dom": "^19",
@@ -72,15 +74,17 @@
     "react-resizable-panels": "^2.1.7",
     "recharts": "^3.1.2",
     "sonner": "^1.7.1",
+    "supabase": "^2.39.2",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^22",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@tsconfig/node18": "^18.2.4",
+    "@types/node": "^22.18.1",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
     "eslint": "^9.15.0",
     "eslint-config-next": "^15.5.2",
     "globals": "^15.13.0",
@@ -88,6 +92,6 @@
     "prisma": "^6.14.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   }
 }

@@ -86,7 +86,7 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
           connectionError ? "h-[calc(100vh-60px)]" : "h-screen"
         } p-4 bg-gray-50 flex flex-col`}
       >
-        <div className="h-full flex flex-col space-y-4">
+        <div className="h-full flex-grow flex-col space-y-4">
           {/* Top Row - Fixed height for gauges */}
           <div className="h-[400px] grid grid-cols-12 gap-4">
             {/* Wind Direction & Speed */}

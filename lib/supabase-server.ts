@@ -1,5 +1,16 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+// @ts-ignore
+import { createClient } from '@supabase/supabase-js'
 import type { Database } from './supabase'
+
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv {
+            NEXT_PUBLIC_SUPABASE_URL: string
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: string
+            SUPABASE_SERVICE_ROLE_KEY: string
+        }
+    }
+}
 
 // Simple server-side client for middleware
 export const createSupabaseServerClient = () => {
@@ -11,7 +22,7 @@ export const createSupabaseServerClient = () => {
         return {} as any
     }
 
-    return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey)
+    return createClient<Database>(supabaseUrl, supabaseAnonKey)
 }
 
 // Admin client (for server-side operations that bypass RLS)
@@ -24,7 +35,7 @@ export const createSupabaseAdminClient = () => {
         return {} as any
     }
 
-    return createSupabaseClient<Database>(supabaseUrl, supabaseServiceKey, {
+    return createClient<Database>(supabaseUrl, supabaseServiceKey, {
         auth: {
             autoRefreshToken: true,
             persistSession: true
