@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Use production URL in production, localhost in development
     const redirectUrl =
       process.env.NODE_ENV === "production"
-        ? "https://awos-dashboard.vercel.app/dashboard"
+        ? "https://aws-dashboard.vercel.app/dashboard"
         : `${window.location.origin}/dashboard`;
 
     console.log("OAuth redirect URL:", redirectUrl);

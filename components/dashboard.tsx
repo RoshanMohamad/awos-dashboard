@@ -24,7 +24,7 @@ export function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex max-h-screen relative">
+    <div className="flex max-h-auto relative">
       {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div
