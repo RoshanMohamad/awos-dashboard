@@ -1,0 +1,119 @@
+nohup: ignoring input
+
+> awos-dashboard@1.0.0 dev
+> next dev
+
+   ▲ Next.js 15.5.2
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.8.105:3000
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     ✓ webpackBuildWorker
+
+ ✓ Starting...
+ ✓ Ready in 3.7s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 535ms (114 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 7.6s (1021 modules)
+ GET /login 200 in 8995ms
+ ✓ Compiled in 2.1s (438 modules)
+ ✓ Compiled in 802ms (438 modules)
+ ✓ Compiled in 825ms (438 modules)
+ ✓ Compiled in 726ms (438 modules)
+ ✓ Compiled in 779ms (438 modules)
+ ✓ Compiled in 729ms (438 modules)
+ ✓ Compiled in 738ms (438 modules)
+ ✓ Compiled in 735ms (438 modules)
+ ✓ Compiled in 1067ms (438 modules)
+ ✓ Compiled in 1510ms (438 modules)
+ ✓ Compiled in 819ms (438 modules)
+ ✓ Compiled in 862ms (438 modules)
+ ✓ Compiled in 679ms (438 modules)
+ ✓ Compiled in 694ms (438 modules)
+ ✓ Compiled in 690ms (438 modules)
+ ✓ Compiled in 767ms (438 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ○ Compiling / ...
+ ✓ Compiled / in 2.6s (1030 modules)
+Auth loading: true
+User data: null
+Supabase client: null
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 200 in 4015ms
+Auth loading: true
+User data: null
+Supabase client: null
+ GET / 200 in 339ms
+ ✓ Compiled in 1811ms (441 modules)
+ ✓ Compiled in 884ms (441 modules)
+ ✓ Compiled in 850ms (441 modules)
+ GET /login 200 in 345ms
+ GET / 200 in 558ms
+ ✓ Compiled in 811ms (441 modules)
+ GET /login 200 in 78ms
+ ✓ Compiled in 852ms (441 modules)
+ GET /login 200 in 71ms
+ ✓ Compiled in 787ms (441 modules)
+ GET /login 200 in 103ms
+ ✓ Compiled in 676ms (441 modules)
+ GET /login 200 in 86ms
+ ✓ Compiled in 675ms (441 modules)
+ GET /login 200 in 85ms
+ ✓ Compiled in 655ms (441 modules)
+ GET /login 200 in 64ms
+ ✓ Compiled in 726ms (441 modules)
+ GET /login 200 in 85ms
+ ✓ Compiled in 929ms (441 modules)
+ GET /login 200 in 103ms
+ ✓ Compiled in 728ms (441 modules)
+ GET /login 200 in 65ms
+ ✓ Compiled in 711ms (441 modules)
+ GET /login 200 in 81ms
+ ✓ Compiled in 694ms (441 modules)
+ GET /login 200 in 107ms
+ ✓ Compiled in 787ms (441 modules)
+ GET /login 200 in 106ms
+ ✓ Compiled in 840ms (441 modules)
+ GET /login 200 in 508ms
+ ✓ Compiled in 945ms (441 modules)
+ GET /login 200 in 97ms
+ ✓ Compiled in 752ms (441 modules)
+ GET /login 200 in 54ms
+ ✓ Compiled in 682ms (441 modules)
+ GET /login 200 in 65ms
+ ✓ Compiled in 618ms (441 modules)
+ GET /login 200 in 50ms
+ ✓ Compiled in 540ms (441 modules)
+ GET /login 200 in 35ms
+ ✓ Compiled in 554ms (441 modules)
+ GET /login 200 in 39ms
+ ✓ Compiled in 681ms (441 modules)
+ GET /login 200 in 77ms
+ ✓ Compiled in 696ms (441 modules)
+ GET /login 200 in 46ms
+ ✓ Compiled in 612ms (441 modules)
+ GET /login 200 in 41ms
+ ✓ Compiled in 542ms (441 modules)
+ GET /login 200 in 40ms
+ ✓ Compiled in 560ms (441 modules)
+ GET /login 200 in 38ms
+ ✓ Compiled in 604ms (441 modules)
+ GET /login 200 in 40ms
+ ✓ Compiled in 619ms (441 modules)
+ GET /login 200 in 40ms
+ ✓ Compiled in 634ms (441 modules)
+ GET /login 200 in 32ms
+ ✓ Compiled in 666ms (441 modules)
+ GET /login 200 in 35ms
+ ✓ Compiled in 537ms (441 modules)
+ GET /login 200 in 171ms
+ ✓ Compiled in 1036ms (441 modules)
+ ⨯ [Error: ENOENT: no such file or directory, open '/home/roshan/Documents/awos-dashboard/.next/server/app-paths-manifest.json'] {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/roshan/Documents/awos-dashboard/.next/server/app-paths-manifest.json',
+  page: '/login'
+}
+ ○ Compiling /_error ...

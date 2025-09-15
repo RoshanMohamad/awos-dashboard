@@ -4,12 +4,56 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { ESP32WebSocketClient, ESP32ApiClient, type SensorData, type Alert } from "@/lib/websocket"
 import { createRealtimeEventSource } from "@/lib/realtimeClient"
 
+// Direct ESP32 data fetching function
+async function fetchDirectESP32Data(): Promise<SensorData | null> {
+  try {
+    const response = await fetch('/api/esp32', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) return null;
+
+    const result = await response.json();
+    if (!result.success) return null;
+
+    const esp32Data = result.data;
+    
+    // Convert ESP32 format to our SensorData format
+    const sensorData: SensorData & { isDataFresh: boolean; connectionStatus: string } = {
+      temperature: esp32Data.temperature,
+      humidity: esp32Data.humidity,
+      pressure: esp32Data.pressure,
+      dewPoint: esp32Data.dewPoint,
+      windSpeed: esp32Data.windSpeed,
+      windDirection: esp32Data.windDirection,
+      batteryLevel: 85, // Default values for ESP32
+      cebPower: true,
+      batteryPower: true,
+      runway: 'ESP32',
+      timestamp: esp32Data.timestamp,
+      sensorStatus: {
+        windSensor: true,
+        pressureSensor: true,
+        temperatureSensor: true,
+        humiditySensor: true,
+      },
+      isDataFresh: esp32Data.isDataFresh,
+      connectionStatus: esp32Data.connectionStatus,
+    };
+    return sensorData;
+  } catch (error) {
+    console.error('Failed to fetch ESP32 data:', error);
+    return null;
+  }
+}
+
 export function useESP32Data(runway: string) {
   const [sensorData, setSensorData] = useState<SensorData | null>(null)
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
-  const [connectionSource, setConnectionSource] = useState<'sse' | 'ws' | 'poll' | null>(null)
+  const [connectionSource, setConnectionSource] = useState<'sse' | 'ws' | 'poll' | 'esp32-direct' | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
 
   const wsClient = useRef<ESP32WebSocketClient | null>(null)
@@ -72,11 +116,25 @@ export function useESP32Data(runway: string) {
     }
   }, [runway])
 
-  // On mount or runway change, fetch latest reading from DB so UI can show persisted values immediately
+  // On mount or runway change, fetch latest reading from DB or ESP32 directly
   useEffect(() => {
     let mounted = true
       ; (async () => {
         try {
+          // Try ESP32 direct data first
+          const esp32Data = await fetchDirectESP32Data();
+          if (mounted && esp32Data) {
+            const extendedData = esp32Data as SensorData & { isDataFresh: boolean; connectionStatus: string };
+            setSensorData(esp32Data);
+            setLastUpdate(new Date(esp32Data.timestamp));
+            setIsConnected(extendedData.connectionStatus === 'connected');
+            setConnectionSource('esp32-direct');
+            setConnectionError(extendedData.connectionStatus !== 'connected' 
+              ? 'ESP32 data is stale' : null);
+            return;
+          }
+
+          // Fallback to database readings
           const res = await fetch(`/api/readings/current?runway=${encodeURIComponent(runway)}`)
           if (!mounted) return
           if (!res.ok) return
@@ -93,6 +151,39 @@ export function useESP32Data(runway: string) {
     return () => {
       mounted = false
     }
+  }, [runway])
+
+  // Fallback API polling when WebSocket is unavailable
+  const startFallbackPolling = useCallback(() => {
+    if (fallbackInterval.current) return
+
+    fallbackInterval.current = setInterval(async () => {
+      if (!apiClient.current) return
+
+      try {
+        const data = await apiClient.current.getCurrentData(runway)
+        if (data) {
+          setSensorData(data)
+          setLastUpdate(new Date())
+          setConnectionError("Using API fallback (WebSocket unavailable)")
+        }
+
+        const alertsData = await apiClient.current.getAlerts(runway)
+        if (alertsData.length > 0) {
+          setAlerts((prev) => {
+            const newAlerts = alertsData.filter((alert) => !prev.some((existing) => existing.id === alert.id))
+            return [...newAlerts, ...prev].slice(0, 10)
+          })
+        }
+      } catch (err) {
+        try {
+          console.warn("API polling error:", String(err))
+        } catch {
+          console.warn("API polling error")
+        }
+        setConnectionError("Failed to connect to ESP32 (WebSocket and API unavailable)")
+      }
+    }, 5000) // Poll every 5 seconds
   }, [runway])
 
   // WebSocket event handlers
@@ -133,40 +224,7 @@ export function useESP32Data(runway: string) {
       // Start fallback API polling
       startFallbackPolling()
     }
-  }, [runway])
-
-  // Fallback API polling when WebSocket is unavailable
-  const startFallbackPolling = useCallback(() => {
-    if (fallbackInterval.current) return
-
-    fallbackInterval.current = setInterval(async () => {
-      if (!apiClient.current) return
-
-      try {
-        const data = await apiClient.current.getCurrentData(runway)
-        if (data) {
-          setSensorData(data)
-          setLastUpdate(new Date())
-          setConnectionError("Using API fallback (WebSocket unavailable)")
-        }
-
-        const alertsData = await apiClient.current.getAlerts(runway)
-        if (alertsData.length > 0) {
-          setAlerts((prev) => {
-            const newAlerts = alertsData.filter((alert) => !prev.some((existing) => existing.id === alert.id))
-            return [...newAlerts, ...prev].slice(0, 10)
-          })
-        }
-      } catch (err) {
-        try {
-          console.warn("API polling error:", String(err))
-        } catch {
-          console.warn("API polling error")
-        }
-        setConnectionError("Failed to connect to ESP32 (WebSocket and API unavailable)")
-      }
-    }, 5000) // Poll every 5 seconds
-  }, [runway])
+  }, [startFallbackPolling])
 
   // Setup WebSocket connection - DISABLED for cloud deployment
   useEffect(() => {

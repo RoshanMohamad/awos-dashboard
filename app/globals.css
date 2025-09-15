@@ -51,6 +51,31 @@
 
     --radius: 0.5rem;
 
+    /* Maritime Compass */
+    --compass-brass: 40 95% 70%;
+    --compass-bronze: 30 40% 30%;
+    --compass-glow: 40 100% 85%;
+    --compass-needle-north: 0 85% 60%;
+    --compass-needle-south: 0 0% 95%;
+    --compass-shadow: 210 12% 25%;
+
+    --gradient-brass: linear-gradient(135deg, hsl(var(--compass-brass)) 0%, hsl(var(--compass-bronze)) 100%);
+    --gradient-depth: radial-gradient(circle, hsl(var(--compass-bronze) / 0.1) 0%, hsl(var(--compass-bronze) / 0.3) 100%);
+    --gradient-compass-face: radial-gradient(circle, hsl(0 0% 100%) 0%, hsl(210 16% 96%) 70%, hsl(210 16% 88%) 100%);
+    --shadow-compass: 0 20px 40px hsl(var(--compass-shadow) / 0.4), 0 8px 16px hsl(var(--compass-shadow) / 0.2), inset 0 4px 8px hsl(var(--compass-glow) / 0.2);
+    --shadow-inner: inset 0 4px 8px hsl(var(--compass-shadow) / 0.3), inset 0 -2px 4px hsl(var(--compass-glow) / 0.1);
+    --shadow-needle: 0 4px 8px hsl(var(--compass-shadow) / 0.6);
+    --transition-needle: transform 1000ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Pressure Gauge */
+    --gauge-safe: 120 70% 50%;
+    --gauge-warning: 40 90% 55%;
+    --gauge-danger: 0 85% 60%;
+    --gauge-bg: 210 16% 96%;
+
+    --shadow-gauge: 0 8px 25px hsl(var(--compass-shadow) / 0.15), 0 4px 10px hsl(var(--compass-shadow) / 0.1);
+    --gradient-glow: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+
     /* Sidebar tweaks */
     --sidebar-background: 210 16% 96%;
     --sidebar-foreground: 210 12% 12%;
@@ -94,6 +119,20 @@
     --chart-3: 45 90% 45%;
     --chart-4: 260 60% 50%;
     --chart-5: 340 70% 50%;
+
+    /* Maritime Compass - Dark Mode */
+    --compass-brass: 35 80% 60%;
+    --compass-bronze: 30 30% 40%;
+    --compass-glow: 40 90% 75%;
+    --compass-needle-north: 0 80% 65%;
+    --compass-needle-south: 0 0% 90%;
+    --compass-shadow: 210 12% 15%;
+
+    /* Pressure Gauge - Dark Mode */
+    --gauge-safe: 120 60% 60%;
+    --gauge-warning: 40 80% 65%;
+    --gauge-danger: 0 75% 70%;
+    --gauge-bg: 210 12% 14%;
 
     --sidebar-background: 210 12% 6%;
     --sidebar-foreground: 210 12% 96%;

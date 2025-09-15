@@ -234,17 +234,7 @@ export function Sidebar({
               Settings
             </Button>
 
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sm"
-              onClick={() => {
-                router.push("/about");
-                onClose();
-              }}
-            >
-              <Info className="h-4 w-4 mr-2" />
-              About
-            </Button>
+
           </div>
         </div>
       </div>

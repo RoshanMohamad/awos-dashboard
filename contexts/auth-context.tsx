@@ -93,11 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log("Attempting Google sign-in...");
 
-    // Use production URL in production, localhost in development
-    const redirectUrl =
-      process.env.NODE_ENV === "production"
-        ? "https://aws-dashboard.vercel.app/dashboard"
-        : `${window.location.origin}/dashboard`;
+    // Use production URL in production, current origin in development
+    const getDevOrigin = () => (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
+    const redirectUrl = process.env.NODE_ENV === 'production'
+      ? 'https://localhost:3000/dashboard'
+      : `${getDevOrigin()}/dashboard`;
 
     console.log("OAuth redirect URL:", redirectUrl);
 
