@@ -143,14 +143,55 @@ export class SensorReadingModel {
                 data_quality: data.dataQuality || 'good',
             };
 
-            const { data: reading, error } = await supabase
-                .from('sensor_readings')
-                .insert(sensorData as any)
-                .select()
-                .single();
+            // Add retry logic for network issues
+            let reading, error;
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            while (attempts < maxAttempts) {
+                attempts++;
+                try {
+                    console.log(`🔄 Attempt ${attempts}/${maxAttempts}: Inserting sensor reading for ${data.stationId}`);
+                    
+                    const result = await supabase
+                        .from('sensor_readings')
+                        .insert(sensorData as any)
+                        .select()
+                        .single();
+
+                    reading = result.data;
+                    error = result.error;
+
+                    if (!error) {
+                        console.log(`✅ Success on attempt ${attempts}: Reading inserted successfully`);
+                        break;
+                    }
+
+                    console.warn(`⚠️ Attempt ${attempts} failed:`, error.message);
+                    if (attempts < maxAttempts) {
+                        const delay = attempts * 1000; // 1s, 2s, 3s delays
+                        console.log(`⏳ Waiting ${delay}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                } catch (networkError: any) {
+                    console.error(`❌ Network error on attempt ${attempts}:`, networkError.message);
+                    
+                    if (attempts < maxAttempts) {
+                        const delay = attempts * 2000; // 2s, 4s delays for network errors
+                        console.log(`🔄 Retrying in ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        // On final attempt, treat as error
+                        error = { 
+                            message: `Network error after ${maxAttempts} attempts: ${networkError.message}`,
+                            code: 'NETWORK_ERROR'
+                        };
+                    }
+                }
+            }
 
             if (error) {
-                console.error('Supabase admin error creating sensor reading:', error);
+                console.error('❌ Final error after all retry attempts:', error);
                 throw new Error(`Failed to create sensor reading: ${error.message}`);
             }
 

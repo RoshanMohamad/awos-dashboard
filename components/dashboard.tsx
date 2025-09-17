@@ -11,9 +11,21 @@ import { Menu, Settings, FileText } from "lucide-react";
 
 export function Dashboard() {
   const router = useRouter();
-  const [selectedRunway, setSelectedRunway] = useState("VCBI");
+  // Use "02" as the default runway to match sidebar navigation
+  const [selectedRunway, setSelectedRunway] = useState("02");
   const [activeTab, setActiveTab] = useState<"live" | "forecast">("live");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Convert runway ID to station ID for API calls
+  const getStationId = (runway: string) => {
+    // Map runway numbers to station IDs
+    const runwayToStation = {
+      "02": "VCBI",
+      "04": "VCBI-04",
+      "VCBI": "VCBI"
+    };
+    return runwayToStation[runway as keyof typeof runwayToStation] || runway;
+  };
 
   return (
     <div className="flex max-auto relative">
@@ -44,9 +56,9 @@ export function Dashboard() {
         {/* Header Bar */}
 
         {activeTab === "live" ? (
-          <LiveDashboard runway={selectedRunway} />
+          <LiveDashboard runway={getStationId(selectedRunway)} />
         ) : (
-          <ForecastHistory runway={selectedRunway} />
+          <ForecastHistory runway={getStationId(selectedRunway)} />
         )}
       </main>
     </div>

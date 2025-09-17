@@ -202,6 +202,18 @@ export function Sidebar({
               variant="ghost"
               className="w-full justify-start text-sm"
               onClick={() => {
+                router.push("/forecast");
+                onClose();
+              }}
+            >
+              <Info className="h-4 w-4 mr-2" />
+              Forecast & History
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm"
+              onClick={() => {
                 router.push("/reports");
                 onClose();
               }}

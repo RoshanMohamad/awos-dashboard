@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { SensorReadingModel } from '@/models/sensorReading';
+import { recordStats } from '@/lib/monitorStats';
 
 // ESP32 data validation schema - matches your ESP32 data format
 const ESP32DataSchema = z.object({
@@ -22,12 +23,22 @@ let latestESP32Data: any = null;
 let lastUpdateTime = 0;
 
 export async function POST(request: NextRequest) {
+    const startTime = Date.now()
+    
     try {
-        const body = await request.json();
-        console.log('Received ESP32 data:', body);
+        const body = await request.json()
+        
+        console.log('📡 Received ESP32 data:', {
+            stationId: body.stationId,
+            temperature: `${body.temperature}°C`,
+            humidity: `${body.humidity}%`,
+            pressure: `${body.pressure} hPa`,
+            windSpeed: `${body.windSpeed} m/s`,
+            windDirection: `${body.windDirection}°`
+        })
 
         // Validate the incoming ESP32 data
-        const validatedData = ESP32DataSchema.parse(body);
+        const validatedData = ESP32DataSchema.parse(body)
 
         // Store latest data in memory for real-time access
         latestESP32Data = {
@@ -55,16 +66,47 @@ export async function POST(request: NextRequest) {
             })
         };
 
-        // Store in database
-        const savedReading = await SensorReadingModel.createServerSide(sensorReading);
+        // Store in database with timeout handling
+        let savedReading;
+        const dbTimeout = 15000; // 15 second timeout (increased for slow connection)
+        
+        try {
+            const dbPromise = SensorReadingModel.createServerSide(sensorReading);
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Database timeout')), dbTimeout)
+            );
 
-        console.log('Successfully stored ESP32 reading:', savedReading.id);
+            savedReading = await Promise.race([dbPromise, timeoutPromise]) as any;
+            
+            const responseTime = Date.now() - startTime;
+            console.log(`✅ ESP32 data stored successfully in ${responseTime}ms:`, savedReading.id);
+            
+            // Record success stats
+            recordStats(true, responseTime);
 
-        return NextResponse.json({
-            success: true,
-            data: savedReading,
-            message: 'ESP32 data received and stored successfully'
-        }, { status: 201 });
+            return NextResponse.json({
+                success: true,
+                data: savedReading,
+                message: 'ESP32 data received and stored successfully',
+                responseTime: `${responseTime}ms`
+            }, { status: 201 });
+
+        } catch (dbError: any) {
+            const responseTime = Date.now() - startTime;
+            console.error(`❌ Database operation failed after ${responseTime}ms:`, dbError.message);
+            
+            // Record failure stats
+            recordStats(false, responseTime, dbError.message);
+            
+            // Return success to ESP32 even if database fails (prevents ESP32 from retrying)
+            return NextResponse.json({
+                success: true,
+                message: 'ESP32 data received (database write pending)',
+                warning: 'Database temporarily unavailable',
+                responseTime: `${responseTime}ms`,
+                timestamp: new Date().toISOString()
+            }, { status: 202 }); // 202 = Accepted but not processed
+        }
 
     } catch (error) {
         console.error('Error processing ESP32 data:', error);

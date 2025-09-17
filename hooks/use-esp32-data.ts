@@ -226,19 +226,20 @@ export function useESP32Data(runway: string) {
     }
   }, [startFallbackPolling])
 
-  // Setup WebSocket connection - DISABLED for cloud deployment
+  // Setup WebSocket connection - DISABLED for cloud deployment (HTTP + SSE is better)
   useEffect(() => {
     // if (!wsClient.current) return
 
-    // wsClient.current.onData(handleSensorData)
-    // wsClient.current.onAlert(handleAlert)
-    // wsClient.current.onConnection(handleConnection)
+    // const client = wsClient.current
+    // client.onData(handleSensorData)
+    // client.onAlert(handleAlert)
+    // client.onConnection(handleConnection)
 
     // // Attempt WebSocket connection
-    // wsClient.current.connect()
+    // client.connect()
 
     // return () => {
-    //   wsClient.current?.disconnect()
+    //   client?.disconnect()
     // }
   }, [handleSensorData, handleAlert, handleConnection])
 

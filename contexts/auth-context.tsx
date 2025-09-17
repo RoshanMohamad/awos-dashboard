@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import type {
   User,
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const getDevOrigin = () => (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
     const redirectUrl = process.env.NODE_ENV === 'production'
-      ? 'https://localhost:3000/dashboard'
+      ? 'https://awos-dashboard.vercel.app/dashboard'
       : `${getDevOrigin()}/dashboard`;
 
     console.log("OAuth redirect URL:", redirectUrl);

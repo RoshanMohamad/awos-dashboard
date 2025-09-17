@@ -61,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icons/icon-192x192.png" type="image/png" />
@@ -81,7 +81,12 @@ html {
       <body>
         <ServiceWorkerRegistration />
         <ErrorBoundary>
-          <ThemeProvider attribute="class">
+          <ThemeProvider 
+            attribute="class" 
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <AuthProvider>
               <Navbar />
               <div className="min-h-screen bg-background text-foreground pt-14">

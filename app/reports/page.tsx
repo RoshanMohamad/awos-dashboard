@@ -37,6 +37,7 @@ import {
   Filter,
 } from "lucide-react";
 import { format } from "date-fns";
+import { ExportUtils, type ExportData, type ReportMetadata } from "@/lib/exportUtils";
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function ReportsPage() {
   const [dateTo, setDateTo] = useState<Date>();
   const [selectedRunway, setSelectedRunway] = useState<string>("02");
   const [reportType, setReportType] = useState<string>("daily");
+  const [selectedFormat, setSelectedFormat] = useState<string>("csv");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateReport = async (type: string) => {
@@ -52,40 +54,35 @@ export default function ReportsPage() {
       // Simulate report generation
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Here you would call your actual API
-      const reportData = {
+      // Generate mock data
+      const mockData: ExportData[] = Array.from({ length: 100 }, (_, i) => ({
+        timestamp: new Date(Date.now() - i * 60000).toISOString(),
+        temperature: 28 + Math.random() * 4,
+        humidity: 70 + Math.random() * 20,
+        pressure: 1010 + Math.random() * 10,
+        windSpeed: 10 + Math.random() * 15,
+        windDirection: Math.random() * 360,
+      }));
+
+      // Create metadata
+      const metadata: ReportMetadata = {
         type,
         runway: selectedRunway,
-        dateFrom: dateFrom?.toISOString(),
-        dateTo: dateTo?.toISOString(),
+        dateFrom: dateFrom?.toDateString(),
+        dateTo: dateTo?.toDateString(),
         generated: new Date().toISOString(),
       };
 
-      // Create and download a mock CSV file
-      const csvContent = `Report Type,${type}\nRunway,${selectedRunway}\nDate Range,${dateFrom?.toDateString()} - ${dateTo?.toDateString()}\n\nTimestamp,Temperature,Humidity,Pressure,Wind Speed,Wind Direction\n${Array.from(
-        { length: 100 },
-        (_, i) =>
-          `${new Date(Date.now() - i * 60000).toISOString()},${(
-            28 +
-            Math.random() * 4
-          ).toFixed(1)},${(70 + Math.random() * 20).toFixed(1)},${(
-            1010 +
-            Math.random() * 10
-          ).toFixed(1)},${(10 + Math.random() * 15).toFixed(1)},${(
-            Math.random() * 360
-          ).toFixed(0)}`
-      ).join("\n")}`;
-
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `AWOS_${type}_report_${selectedRunway}_${format(
+      // Generate the export based on selected format
+      const blob = ExportUtils.generateExport(mockData, metadata, selectedFormat);
+      const fileExtension = ExportUtils.getFileExtension(selectedFormat);
+      const filename = `AWOS_${type}_report_${selectedRunway}_${format(
         new Date(),
         "yyyy-MM-dd"
-      )}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      )}${fileExtension}`;
+
+      // Download the file
+      ExportUtils.downloadFile(blob, filename);
     } catch (error) {
       console.error("Report generation failed:", error);
     } finally {
@@ -176,7 +173,7 @@ export default function ReportsPage() {
 
               <div className="space-y-2">
                 <Label>Output Format</Label>
-                <Select defaultValue="csv">
+                <Select value={selectedFormat} onValueChange={setSelectedFormat}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select format" />
                   </SelectTrigger>

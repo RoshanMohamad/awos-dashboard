@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ESP32 API Test - Fixed CORS</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    #status { font-weight: bold; }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: blue; }
+  </style>
+</head>
+<body>
+  <h2>🧪 ESP32 API Test (CORS Fixed)</h2>
+  <p><strong>⚠️ CORS Issue Detected!</strong></p>
+  <p>This file needs to be served via HTTP server, not opened directly.</p>
+  
+  <h3>✅ Better Option:</h3>
+  <p>Go to: <a href="http://localhost:3000/test-esp32" target="_blank">http://localhost:3000/test-esp32</a></p>
+  
+  <h3>🔧 Or Start Simple Server:</h3>
+  <pre>cd /home/roshan/Documents/awos-dashboard
+python3 -m http.server 8080
+# Then open: http://localhost:8080</pre>
+
+  <hr>
+  <p>Status: <span id="status" class="error">CORS Error - Use HTTP server instead</span></p>
+  <pre id="log">Error: Cannot make requests from file:// to http://localhost:3000
+This is a browser security restriction.
+
+Solutions:
+1. Visit: http://localhost:3000/test-esp32
+2. Or start HTTP server: python3 -m http.server 8080</pre>
+
+  <script>
+    // This will fail due to CORS when opened via file://
+    const endpoint = "http://localhost:3000/api/esp32";
+
+    function sendData() {
+      const data = {
+        stationId: "VCBI", // ✅ Changed to match dashboard
+        temperature: parseFloat((25 + Math.random() * 5).toFixed(1)), // randomize
+        humidity: parseFloat((60 + Math.random() * 10).toFixed(1)),
+        pressure: parseFloat((1010 + Math.random() * 6).toFixed(1)),
+        dewPoint: parseFloat((20 + Math.random() * 5).toFixed(1)),
+        windSpeed: parseFloat((5 + Math.random() * 10).toFixed(1)),
+        windDirection: Math.floor(Math.random() * 360),
+        lat: 9.8580,
+        lng: 80.0340,
+        utcTime: new Date().toISOString().substr(11, 8) // HH:MM:SS
+      };
+
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(resp => {
+        document.getElementById("status").textContent = "Success ✅";
+        document.getElementById("log").textContent = JSON.stringify(resp, null, 2);
+      })
+      .catch(err => {
+        document.getElementById("status").textContent = "Error ❌";
+        document.getElementById("log").textContent = err;
+      });
+    }
+
+    // Send immediately + every 5 seconds
+    sendData();
+    setInterval(sendData, 5000);
+  </script>
+</body>
+</html>

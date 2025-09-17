@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { WindForecastChart } from "@/components/wind-forecast-chart"
 import { Download, AlertTriangle, TrendingUp, Calendar } from "lucide-react"
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
@@ -10,6 +11,7 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "rec
 // Add the ESP32 data hook import
 import { useESP32Data } from "@/hooks/use-esp32-data"
 import { ESP32ApiClient } from "@/lib/esp32ApiClient"
+import { ExportUtils, type ExportData, type ReportMetadata } from "@/lib/exportUtils"
 
 interface ForecastHistoryProps {
   runway: string
@@ -19,6 +21,7 @@ export function ForecastHistory({ runway }: ForecastHistoryProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [historicalData, setHistoricalData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [exportFormat, setExportFormat] = useState<string>("csv")
   const { alerts } = useESP32Data(runway)
 
   useEffect(() => {
@@ -67,20 +70,43 @@ export function ForecastHistory({ runway }: ForecastHistoryProps) {
     loadHistoricalData()
   }, [runway])
 
-  const handleExportCSV = async () => {
+  const handleExportData = async () => {
     try {
-      const apiClient = new ESP32ApiClient()
       const endDate = new Date().toISOString()
       const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-      const blob = await apiClient.exportData(runway, startDate, endDate)
+      // Try to get data from ESP32 API first
+      const apiClient = new ESP32ApiClient()
+      const blob = await apiClient.exportData(runway, startDate, endDate, exportFormat)
+      
       if (blob) {
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `awos_data_runway_${runway}_${new Date().toISOString().split("T")[0]}.csv`
-        a.click()
-        window.URL.revokeObjectURL(url)
+        const fileExtension = ExportUtils.getFileExtension(exportFormat)
+        const filename = `awos_data_runway_${runway}_${new Date().toISOString().split("T")[0]}${fileExtension}`
+        ExportUtils.downloadFile(blob, filename)
+      } else {
+        // Fallback to local data if API fails
+        const exportData: ExportData[] = historicalData.map(item => ({
+          timestamp: new Date(item.date).toISOString(),
+          temperature: item.temperature,
+          humidity: item.humidity,
+          pressure: item.pressure,
+          windSpeed: item.windSpeed,
+          windDirection: item.windDirection,
+        }))
+
+        const metadata: ReportMetadata = {
+          type: "Historical Data Export",
+          runway: runway,
+          dateFrom: startDate,
+          dateTo: endDate,
+          generated: new Date().toISOString(),
+        }
+
+        const generatedBlob = ExportUtils.generateExport(exportData, metadata, exportFormat)
+        const fileExtension = ExportUtils.getFileExtension(exportFormat)
+        const filename = `awos_data_runway_${runway}_${new Date().toISOString().split("T")[0]}${fileExtension}`
+        
+        ExportUtils.downloadFile(generatedBlob, filename)
       }
     } catch (error) {
       console.error("Export error:", error)
@@ -133,10 +159,23 @@ export function ForecastHistory({ runway }: ForecastHistoryProps) {
                       <div className="text-xs text-gray-600">Monitoring</div>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={handleExportCSV} className="w-full bg-transparent text-sm py-2">
-                    <Download className="h-4 w-4 mr-2" />
-                    CSV Export
-                  </Button>
+                  <div className="space-y-2">
+                    <Select value={exportFormat} onValueChange={setExportFormat}>
+                      <SelectTrigger className="w-full text-xs">
+                        <SelectValue placeholder="Format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="csv">CSV</SelectItem>
+                        <SelectItem value="excel">Excel</SelectItem>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                        <SelectItem value="json">JSON</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" onClick={handleExportData} className="w-full bg-transparent text-sm py-2">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Data
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 

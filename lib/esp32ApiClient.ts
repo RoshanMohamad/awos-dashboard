@@ -60,7 +60,7 @@ export class ESP32ApiClient {
     }
   }
 
-  async exportData(runway: string, startDate: string, endDate: string): Promise<Blob | null> {
+  async exportData(runway: string, startDate: string, endDate: string, format: string = "csv"): Promise<Blob | null> {
     try {
       const response = await fetch(`${this.baseUrl}/api/export/${runway}`, {
         method: "POST",
@@ -70,7 +70,7 @@ export class ESP32ApiClient {
         body: JSON.stringify({
           startDate,
           endDate,
-          format: "csv",
+          format,
         }),
       })
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
