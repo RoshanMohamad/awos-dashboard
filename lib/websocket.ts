@@ -37,7 +37,7 @@ export class ESP32WebSocketClient {
   private onConnectionCallback?: (connected: boolean) => void
 
   constructor(
-    private url = "ws://192.168.8.160:81", // Replace with your ESP32 IP
+    private url = "ws://192.168.4.177:81", // ESP32 IP Address
   ) { }
 
   connect() {
@@ -161,7 +161,7 @@ export class ESP32WebSocketClient {
 
 export class ESP32ApiClient {
   constructor(
-    private baseUrl = "http://192.168.8.160", // Replace with your ESP32 IP
+    private baseUrl = "http://192.168.4.177", // ESP32 IP Address
   ) { }
 
   async getCurrentData(runway: string): Promise<SensorData | null> {

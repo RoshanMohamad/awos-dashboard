@@ -4,7 +4,7 @@ import type { SensorData, Alert } from "./websocket"
 
 export class ESP32ApiClient {
   constructor(
-    private baseUrl = "http://192.168.8.160", // Replace with your ESP32 IP
+    private baseUrl = "http://192.168.4.177", // ESP32 IP Address
   ) { }
 
   async getCurrentData(runway: string): Promise<SensorData | null> {

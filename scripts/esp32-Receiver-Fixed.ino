@@ -53,13 +53,10 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2COLED, -1);
 #define LORA_RST   4
 #define LORA_DIO0  2
 
-// WiFi Credentials - REPLACE WITH YOUR NETWORK
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-
-// Next.js Dashboard Configuration - REPLACE WITH YOUR URLs
-const char* NEXTJS_BASE_URL = "http://192.168.8.186:3000";  // Your computer's IP
-// For cloud deployment: const char* NEXTJS_BASE_URL = "https://your-app.vercel.app";
+// WiFi Credentials - REPLACE WITH YOUR ACTUAL NETWORK
+const char* ssid = "YOUR_ACTUAL_WIFI_SSID";           // Replace with your WiFi name
+const char* password = "YOUR_ACTUAL_WIFI_PASSWORD";   // Replace with your WiFi password
+const char* NEXTJS_BASE_URL = "https://awos-dashboard.vercel.app";  // Your deployed Vercel app
 const char* NEXTJS_ESP32_ENDPOINT = "/api/esp32";
 
 // Web Server
@@ -200,11 +197,12 @@ void setupWiFi() {
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println();
     Serial.println("WiFi Connected!");
-    Serial.print("IP Address: ");
+    Serial.print("ESP32 IP Address: ");
     Serial.println(WiFi.localIP());
-    Serial.print("Will post to Next.js at: ");
+    Serial.print("Posting data to PRODUCTION: ");
     Serial.print(NEXTJS_BASE_URL);
     Serial.println(NEXTJS_ESP32_ENDPOINT);
+    Serial.println("Connected to deployed AWOS Dashboard on Vercel!");
     wifiConnected = true;
   } else {
     Serial.println();
@@ -275,8 +273,11 @@ void postToNextJS() {
     return;
   }
 
+  // Configure for HTTPS connection to Vercel
   http.begin(String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_ENDPOINT));
   http.addHeader("Content-Type", "application/json");
+  http.addHeader("User-Agent", "ESP32-AWOS-Station/2.1");
+  http.setTimeout(15000);  // 15 second timeout for HTTPS
   
   // Create JSON payload matching your Next.js API format
   DynamicJsonDocument doc(1024);
@@ -351,7 +352,8 @@ void displayStartupMessage() {
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
   display.println("AWOS Starting...");
-  display.println("LoRa + Next.js");
+  display.println("Production Mode");
+  display.println("Vercel Deploy");
   display.println("Initializing...");
   display.display();
   delay(2000);
@@ -629,7 +631,10 @@ window.onload = updateData;
 </head>
 <body>
 <div class='container'>
-<h1>🌤️ AWOS Receiver + Next.js Integration</h1>
+<h1>🌤️ AWOS Receiver → Production Dashboard</h1>
+<p style='text-align:center;color:#666;margin-bottom:20px;'>
+📡 Connected to: <strong>https://awos-dashboard.vercel.app</strong>
+</p>
 <div id='status' class='status'>Checking status...</div>
 <table>
 <tr><th>Parameter</th><th>Value</th></tr>

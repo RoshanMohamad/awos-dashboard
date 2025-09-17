@@ -33,8 +33,8 @@ const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 // NEXT.JS DASHBOARD ENDPOINTS
-const char* NEXTJS_BASE_URL = "https://your-app.vercel.app"; // Replace with your Vercel URL
-// For local development, use: "http://192.168.1.100:3000" (replace with your computer's IP)
+const char* NEXTJS_BASE_URL = "http://192.168.4.177:3000"; // Replace with your Vercel URL
+// For local development, use: "http://192.168.4.177:3000" (replace with your computer's IP)
 const char* NEXTJS_ESP32_ENDPOINT = "/api/esp32";
 
 // LORA PIN DEFINITIONS
