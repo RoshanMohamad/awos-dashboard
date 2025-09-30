@@ -1,35 +1,12 @@
-/*
- * -----------------------------------------------------------------------------
- * ESP32 AWOS Receiver with Next.js Dashboard Integration
- * -----------------------------------------------------------------------------
- * This code receives LoRa data from ESP32 transmitter and sends it to your
- * Next.js dashboard while also maintaining local web interface and OLED display.
- *
- * Key Features:
- * 1. LoRa receiver for ESP32 transmitter data
- * 2. WiFi connection for HTTP posts to Next.js app
- * 3. Local web server with complete weather data
- * 4. OLED display with rotary encoder navigation
- * 5. Serial communication with Nano module for SD storage
- * 
- * Libraries Needed:
- * - "LoRa" by Sandeep Mistry
- * - "WiFi" (comes with ESP32 core)
- * - "WebServer" (comes with ESP32 core) 
- * - "ArduinoJson" by Benoit Blanchon
- * - "HTTPClient" (comes with ESP32 core)
- * - "Adafruit SSD1306"
- * - "Adafruit GFX Library"
- * -----------------------------------------------------------------------------
- */
+
 
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <SPI.h>
-#include <LoRa.h>
-#include <WiFi.h>
-#include <WebServer.h>
+#include <Ethernet.h>
+#include <EthernetClient.h>
+#include <EthernetServer.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
@@ -48,19 +25,28 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2COLED, -1);
 #define RXD1 33       // Serial1 RX
 #define TXD1 32       // Serial1 TX
 
-// LoRa Pin Definitions
-#define LORA_SS    5
-#define LORA_RST   4
-#define LORA_DIO0  2
+// Ethernet W5500 Pin Definitions
+#define ETH_CS    5   // Chip Select
+#define ETH_RST   26  // Reset pin (optional)
+#define ETH_MOSI  23  // SPI MOSI
+#define ETH_MISO  19  // SPI MISO
+#define ETH_SCK   18  // SPI Clock
 
-// WiFi Credentials - REPLACE WITH YOUR ACTUAL NETWORK
-const char* ssid = "YOUR_ACTUAL_WIFI_SSID";           // Replace with your WiFi name
-const char* password = "YOUR_ACTUAL_WIFI_PASSWORD";   // Replace with your WiFi password
+
+
+// Ethernet Configuration
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};  // MAC address for Ethernet
+IPAddress ip(192, 168, 1, 177);                       // Static IP (optional)
+IPAddress dns(8, 8, 8, 8);                            // DNS server
+IPAddress gateway(192, 168, 1, 1);                    // Gateway
+IPAddress subnet(255, 255, 255, 0);                   // Subnet mask
+
 const char* NEXTJS_BASE_URL = "https://awos-dashboard.vercel.app";  // Your deployed Vercel app
 const char* NEXTJS_ESP32_ENDPOINT = "/api/esp32";
 
 // Web Server
-WebServer server(80);
+EthernetServer server(80);
+EthernetClient client;
 HTTPClient http;
 
 // Weather Data Structure
@@ -103,7 +89,7 @@ const unsigned long NEXTJS_POST_INTERVAL = 10000;     // 10 seconds to Next.js
 const unsigned long LORA_TIMEOUT = 60000;             // 1 minute LoRa timeout
 
 // Connection Status
-bool wifiConnected = false;
+bool ethernetConnected = false;
 bool nanoConnected = false;
 bool loraConnected = false;
 int nextJSPostErrors = 0;
@@ -131,11 +117,11 @@ void setup() {
   pinMode(SW, INPUT_PULLUP);
   lastClkState = digitalRead(CLK);
 
-  // Initialize LoRa
-  setupLoRa();
+  
+  
 
-  // Initialize WiFi
-  setupWiFi();
+  // Initialize Ethernet
+  setupEthernet();
 
   // Initialize Web Server
   setupWebServer();
@@ -168,77 +154,59 @@ void loop() {
   updateConnectionStatus();
 }
 
-void setupLoRa() {
-  Serial.println("Initializing LoRa...");
-  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
-  
-  if (!LoRa.begin(433E6)) {
-    Serial.println("LoRa initialization failed!");
-    loraConnected = false;
-  } else {
-    Serial.println("LoRa initialized successfully");
-    LoRa.onReceive(onLoRaReceive);
-    LoRa.receive();
-    loraConnected = true;
-  }
-}
 
-void setupWiFi() {
-  Serial.println("Connecting to WiFi...");
-  WiFi.begin(ssid, password);
+
+void setupEthernet() {
+  Serial.println("Initializing Ethernet...");
   
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+  // Initialize SPI for Ethernet
+  SPI.begin(ETH_SCK, ETH_MISO, ETH_MOSI);
+  
+  // Reset Ethernet module (if reset pin is connected)
+  if (ETH_RST != -1) {
+    pinMode(ETH_RST, OUTPUT);
+    digitalWrite(ETH_RST, LOW);
+    delay(100);
+    digitalWrite(ETH_RST, HIGH);
     delay(500);
-    Serial.print(".");
-    attempts++;
   }
   
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println();
-    Serial.println("WiFi Connected!");
+  // Set Ethernet CS pin
+  Ethernet.init(ETH_CS);
+  
+  // Try DHCP first, then fall back to static IP
+  Serial.println("Attempting DHCP...");
+  if (Ethernet.begin(mac) == 0) {
+    Serial.println("DHCP failed, using static IP");
+    Ethernet.begin(mac, ip, dns, gateway, subnet);
+  }
+  
+  delay(2000); // Give Ethernet time to initialize
+  
+  if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+    Serial.println("Ethernet hardware not found!");
+    ethernetConnected = false;
+  } else if (Ethernet.linkStatus() == LinkOFF) {
+    Serial.println("Ethernet cable not connected!");
+    ethernetConnected = false;
+  } else {
+    Serial.println("Ethernet Connected!");
     Serial.print("ESP32 IP Address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(Ethernet.localIP());
     Serial.print("Posting data to PRODUCTION: ");
     Serial.print(NEXTJS_BASE_URL);
     Serial.println(NEXTJS_ESP32_ENDPOINT);
     Serial.println("Connected to deployed AWOS Dashboard on Vercel!");
-    wifiConnected = true;
-  } else {
-    Serial.println();
-    Serial.println("WiFi connection failed!");
-    wifiConnected = false;
+    ethernetConnected = true;
   }
 }
 
 void setupWebServer() {
-  server.on("/", handleRoot);
-  server.on("/data", handleDataAPI);
-  server.on("/status", handleStatusAPI);
   server.begin();
-  Serial.println("Web server started on port 80");
+  Serial.println("Ethernet web server started on port 80");
 }
 
-void onLoRaReceive(int packetSize) {
-  if (packetSize == 0) return;
 
-  String receivedText = "";
-  while (LoRa.available()) {
-    receivedText += (char)LoRa.read();
-  }
-
-  Serial.println("LoRa packet received: " + receivedText);
-  parseLoRaData(receivedText);
-  weatherData.lastPacketTime = millis();
-  weatherData.dataValid = true;
-  lastLoRaPacket = millis();
-  
-  // Immediately try to post to Next.js on new data
-  if (millis() - lastNextJSPost > 5000) {
-    postToNextJS();
-    lastNextJSPost = millis();
-  }
-}
 
 void parseLoRaData(String data) {
   // Parse CSV format: temp,humidity,pressure,dewPoint,windSpeed,windDirection,lat,lng,time
@@ -269,12 +237,12 @@ void parseLoRaData(String data) {
 }
 
 void postToNextJS() {
-  if (!wifiConnected || nextJSPostErrors >= MAX_NEXTJS_ERRORS) {
+  if (!ethernetConnected || nextJSPostErrors >= MAX_NEXTJS_ERRORS) {
     return;
   }
 
-  // Configure for HTTPS connection to Vercel
-  http.begin(String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_ENDPOINT));
+  // Configure for HTTPS connection to Vercel using Ethernet client
+  http.begin(client, String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_ENDPOINT));
   http.addHeader("Content-Type", "application/json");
   http.addHeader("User-Agent", "ESP32-AWOS-Station/2.1");
   http.setTimeout(15000);  // 15 second timeout for HTTPS
@@ -330,8 +298,8 @@ void updateConnectionStatus() {
     loraConnected = true;
   }
   
-  // Update WiFi connection status
-  wifiConnected = (WiFi.status() == WL_CONNECTED);
+  // Update Ethernet connection status
+  ethernetConnected = (Ethernet.linkStatus() == LinkON);
 }
 
 bool shouldSendToNano() {
@@ -341,7 +309,7 @@ bool shouldSendToNano() {
 
 bool shouldPostToNextJS() {
   return (weatherData.dataValid && 
-          wifiConnected && 
+          ethernetConnected && 
           millis() - lastNextJSPost > NEXTJS_POST_INTERVAL &&
           nextJSPostErrors < MAX_NEXTJS_ERRORS);
 }
@@ -365,7 +333,7 @@ void displaySystemStatus() {
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
   display.println("=== STATUS ===");
-  display.println("WiFi: " + String(wifiConnected ? "OK" : "ERR"));
+  display.println("Eth: " + String(ethernetConnected ? "OK" : "ERR"));
   display.println("LoRa: " + String(loraConnected ? "OK" : "ERR"));  
   display.println("Nano: " + String(nanoConnected ? "OK" : "ERR"));
   display.println("NextJS: " + String(nextJSPostErrors == 0 ? "OK" : "ERR"));
@@ -410,11 +378,11 @@ void updateOLEDDisplay() {
   switch (page) {
     case 0:  // System Status
       display.println("=== SYSTEM ===");
-      display.println("WiFi:" + String(wifiConnected ? "OK" : "ERR") + 
+      display.println("Eth:" + String(ethernetConnected ? "OK" : "ERR") + 
                        " LoRa:" + String(loraConnected ? "OK" : "ERR"));
       display.println("Nano:" + String(nanoConnected ? "OK" : "ERR") + 
                        " NextJS:" + String(nextJSPostErrors == 0 ? "OK" : "ERR"));
-      display.println("IP:" + (wifiConnected ? WiFi.localIP().toString() : "N/A"));
+      display.println("IP:" + (ethernetConnected ? Ethernet.localIP().toString() : "N/A"));
       display.println("Packets: " + String(weatherData.dataValid ? "✓" : "✗"));
       display.println("Errors: " + String(nextJSPostErrors));
       display.println("Page 1/7");
@@ -508,16 +476,25 @@ String getLocalTime() {
 }
 
 void handleSerialInput() {
-  // Handle data from Nano module (existing functionality)
   while (Serial2.available()) {
     String line = Serial2.readStringUntil('\n');
     line.trim();
-    
+
     if (line.length() > 0) {
       if (line.startsWith("------")) {
         nanoConnected = true;
       }
-      // Process other serial data as before...
+
+      // ✅ same role as onLoRaReceive
+      parseLoRaData(line);
+      weatherData.lastPacketTime = millis();
+      weatherData.dataValid = true;
+
+      // ✅ optional: post immediately like old function
+      if (millis() - lastNextJSPost > 5000) {
+        postToNextJS();
+        lastNextJSPost = millis();
+      }
     }
   }
 }
@@ -535,15 +512,72 @@ void sendDataToNano() {
 }
 
 void serveWebRequests() {
-  server.handleClient();
+  EthernetClient client = server.available();
+  if (client) {
+    String request = "";
+    bool currentLineIsBlank = true;
+    
+    while (client.connected()) {
+      if (client.available()) {
+        char c = client.read();
+        request += c;
+        
+        if (c == '\n' && currentLineIsBlank) {
+          // Parse the request
+          if (request.indexOf("GET / ") >= 0) {
+            handleRoot(client);
+          } else if (request.indexOf("GET /data") >= 0) {
+            handleDataAPI(client);
+          } else if (request.indexOf("GET /status") >= 0) {
+            handleStatusAPI(client);
+          } else {
+            // 404 Not Found
+            client.println("HTTP/1.1 404 Not Found");
+            client.println("Content-Type: text/html");
+            client.println("Connection: close");
+            client.println();
+            client.println("<!DOCTYPE HTML><html><body><h1>404 Not Found</h1></body></html>");
+          }
+          break;
+        }
+        
+        if (c == '\n') {
+          currentLineIsBlank = true;
+        } else if (c != '\r') {
+          currentLineIsBlank = false;
+        }
+      }
+    }
+    
+    delay(10);
+    client.stop();
+  }
 }
 
-void handleRoot() {
+void handleRoot(EthernetClient client) {
   String html = generateWebPage();
-  server.send(200, "text/html", html);
+  
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println("Connection: close");
+  client.print("Content-Length: ");
+  client.println(html.length());
+  client.println();
+  client.print(html);
 }
 
-void handleDataAPI() {
+void sendJSONResponse(EthernetClient client, String jsonString) {
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: application/json");
+  client.println("Access-Control-Allow-Origin: *");
+  client.println("Connection: close");
+  client.print("Content-Length: ");
+  client.println(jsonString.length());
+  client.println();
+  client.print(jsonString);
+}
+
+void handleDataAPI(EthernetClient client) {
   DynamicJsonDocument json(1024);
   json["temperature"] = weatherData.temperature;
   json["humidity"] = weatherData.humidity;
@@ -556,39 +590,40 @@ void handleDataAPI() {
   json["utcTime"] = weatherData.utcTime;
   json["lastPacketTime"] = weatherData.lastPacketTime;
   json["dataValid"] = weatherData.dataValid;
-  json["wifiConnected"] = wifiConnected;
+  json["ethernetConnected"] = ethernetConnected;
   json["loraConnected"] = loraConnected;
   json["nextJSStatus"] = (nextJSPostErrors == 0) ? "connected" : "error";
 
   String jsonString;
   serializeJson(json, jsonString);
   
-  server.send(200, "application/json", jsonString);
+  sendJSONResponse(client, jsonString);
 }
 
-void handleStatusAPI() {
+void handleStatusAPI(EthernetClient client) {
   DynamicJsonDocument json(512);
-  json["device"] = "ESP32-AWOS-Receiver-NextJS";
-  json["version"] = "2.1";
+  json["device"] = "ESP32-AWOS-Receiver-Ethernet";
+  json["version"] = "2.2";
   json["uptime"] = millis();
   json["freeHeap"] = ESP.getFreeHeap();
-  json["wifiRSSI"] = WiFi.RSSI();
-  json["wifiConnected"] = wifiConnected;
+  json["ethernetStatus"] = Ethernet.linkStatus();
+  json["ethernetConnected"] = ethernetConnected;
   json["loraConnected"] = loraConnected;
   json["nextJSErrors"] = nextJSPostErrors;
   json["nextJSEndpoint"] = String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_ENDPOINT);
+  json["ipAddress"] = Ethernet.localIP().toString();
   
   String jsonString;
   serializeJson(json, jsonString);
   
-  server.send(200, "application/json", jsonString);
+  sendJSONResponse(client, jsonString);
 }
 
 String generateWebPage() {
   String html = R"rawliteral(
 <!DOCTYPE html>
 <html><head>
-<title>AWOS Receiver - Next.js Integration</title>
+<title>AWOS Receiver - Ethernet Integration</title>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
 <style>
 body{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5;}
@@ -616,12 +651,12 @@ function updateData(){
     document.getElementById('time').textContent = data.utcTime;
     
     const statusDiv = document.getElementById('status');
-    if(data.wifiConnected && data.loraConnected && data.nextJSStatus === 'connected'){
+    if(data.ethernetConnected && data.loraConnected && data.nextJSStatus === 'connected'){
       statusDiv.className = 'status ok';
-      statusDiv.innerHTML = '✅ All systems operational - Data flowing to Next.js dashboard!';
+      statusDiv.innerHTML = '✅ All systems operational - Data flowing via Ethernet to Next.js dashboard!';
     } else {
       statusDiv.className = 'status error';
-      statusDiv.innerHTML = '⚠️ System issues detected - Check connections';
+      statusDiv.innerHTML = '⚠️ System issues detected - Check Ethernet/LoRa connections';
     }
   });
 }
@@ -631,9 +666,9 @@ window.onload = updateData;
 </head>
 <body>
 <div class='container'>
-<h1>🌤️ AWOS Receiver → Production Dashboard</h1>
+<h1>� AWOS Receiver → Ethernet → Production Dashboard</h1>
 <p style='text-align:center;color:#666;margin-bottom:20px;'>
-📡 Connected to: <strong>https://awos-dashboard.vercel.app</strong>
+� Connected via Ethernet to: <strong>https://awos-dashboard.vercel.app</strong>
 </p>
 <div id='status' class='status'>Checking status...</div>
 <table>
@@ -649,7 +684,7 @@ window.onload = updateData;
 <tr><td>UTC Time</td><td><span id='time'>--</span></td></tr>
 </table>
 <p style='text-align:center;color:#666;'>
-📡 Data updates every 5 seconds | 🔄 Sends to Next.js every 10 seconds
+� Data updates every 5 seconds via Ethernet | 🔄 Sends to Next.js every 10 seconds
 </p>
 </div>
 </body></html>
