@@ -52,6 +52,7 @@ export function LoginPage() {
 
     try {
       setIsLoading(true);
+      console.log(`Attempting ${isSignUp ? 'sign-up' : 'sign-in'} for:`, email);
 
       const { error } = isSignUp
         ? await signUp(email, password)
@@ -59,17 +60,21 @@ export function LoginPage() {
 
       if (error) {
         console.error("Email auth error:", error);
-        alert(`${isSignUp ? "Sign-up" : "Sign-in"} failed: ${error.message}`);
+        const errorMessage = error.message || 'Authentication failed. Please try again.';
+        alert(`${isSignUp ? "Sign-up" : "Sign-in"} failed: ${errorMessage}`);
       } else {
+        console.log('✅ Authentication successful!');
         if (isSignUp) {
-          alert("Check your email for verification link!");
+          alert("Account created successfully! You can now sign in.");
+          setIsSignUp(false);
         } else {
+          console.log('Redirecting to dashboard...');
           router.push("/dashboard");
         }
       }
     } catch (error) {
       console.error("Error during email auth:", error);
-      alert("An unexpected error occurred");
+      alert("An unexpected error occurred. Please check the console for details.");
     } finally {
       setIsLoading(false);
     }
@@ -77,35 +82,58 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-            <Plane className="h-8 w-8 text-white" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Welcome to AWOS</CardTitle>
-          <CardDescription>
-            Automatic Weather Observation System
-            <br />
-            Colombo International Airport
+          <CardTitle className="text-2xl font-bold">
+            {isSignUp ? "Create an Account" : "Welcome Back"}
+          </CardTitle>
+          <CardDescription className="mt-2 text-gray-600">
+            {isSignUp
+              ? "Sign up to access the dashboard"
+              : "Sign in to continue to the dashboard"}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Re-enable Google OAuth - make sure to configure redirect URIs first */}
-          <Button
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            className="w-full flex items-center justify-center space-x-2"
-            size="lg"
-          >
-            <Chrome className="h-5 w-5" />
-            <span>{isLoading ? "Signing in..." : "Sign in with Google"}</span>
-          </Button>
-
-          <div className="text-center text-sm text-gray-600">
-            <p>Authorized personnel only</p>
-            <p className="mt-1">Contact system administrator for access</p>
-          </div>
+        <CardContent>
+          <form onSubmit={handleEmailAuth} className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="mb-1 font-medium">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="password" className="mb-1 font-medium">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
+            </Button>
+          </form>
         </CardContent>
+        <div className="flex items-center justify-between p-4 pt-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsSignUp(!isSignUp)}
+          >
+            {isSignUp ? "Already have an account?" : "Create an account"}
+          </Button>
+        </div>
       </Card>
     </div>
   );

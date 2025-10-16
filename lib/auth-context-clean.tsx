@@ -61,53 +61,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     setLoading(true);
     try {
-      console.log("🔐 AuthContext: Calling localAuth.signIn with:", email);
-      const result = await localAuth.signIn(email, password);
-      console.log("📦 AuthContext: Raw signIn result:", JSON.stringify(result, null, 2));
+      const { user: signedInUser, error } = await localAuth.signIn(email, password);
       
-      // Check if result is valid
-      if (!result) {
-        console.error("❌ AuthContext: signIn returned null/undefined");
-        return {
-          error: {
-            message: "Authentication failed - no response from auth system",
-            code: "NO_RESPONSE",
-          } as AuthError,
-        };
+      if (error) {
+        return { error };
       }
 
-      // Check for error
-      if (result.error) {
-        console.error("❌ AuthContext: Sign in error:", JSON.stringify(result.error));
-        
-        // Handle empty error object
-        if (!result.error.message && !result.error.code) {
-          console.error("❌ AuthContext: Empty error object detected!");
-          return {
-            error: {
-              message: "Authentication failed. Please check browser console for details or try the test page at /test-db",
-              code: "UNKNOWN_ERROR",
-            } as AuthError,
-          };
-        }
-        
-        return { error: result.error };
-      }
-
-      if (result.user) {
-        console.log("✅ AuthContext: Setting user:", result.user.email);
-        setUser(result.user);
-      } else {
-        console.warn("⚠️ AuthContext: No user in successful result");
-      }
-      
+      setUser(signedInUser || null);
       return { error: null };
     } catch (error) {
-      console.error("❌ AuthContext: Exception during sign in:", error);
       return {
         error: {
-          message: error instanceof Error ? error.message : "Sign in failed with unknown error",
-          code: "SIGNIN_EXCEPTION",
+          message: error instanceof Error ? error.message : "Sign in failed",
+          code: "SIGNIN_ERROR",
         } as AuthError,
       };
     } finally {

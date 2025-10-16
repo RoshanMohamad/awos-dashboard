@@ -25,3 +25,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts.backup/
+
+# local data storage
+/data/*.json
+!/data/sensor_readings.json
+/data/backups/
+
+# local database backups
+data_backup*/
