@@ -8,9 +8,9 @@ import { WindForecastChart } from "@/components/wind-forecast-chart"
 import { Download, AlertTriangle, TrendingUp, Calendar } from "lucide-react"
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
-// Add the ESP32 data hook import
+// Use local API client for offline operation
 import { useESP32Data } from "@/hooks/use-esp32-data"
-import { ESP32ApiClient } from "@/lib/esp32ApiClient"
+import { localApiClient } from "@/lib/local-api-client"
 import { ExportUtils, type ExportData, type ReportMetadata } from "@/lib/exportUtils"
 
 interface ForecastHistoryProps {
@@ -36,10 +36,11 @@ export function ForecastHistory({ runway }: ForecastHistoryProps) {
     const loadHistoricalData = async () => {
       setLoading(true)
       try {
-        const apiClient = new ESP32ApiClient()
-        const data = await apiClient.getHistoricalData(runway, 30)
+        console.log('📊 Loading historical data for runway:', runway);
+        const data = await localApiClient.getHistoricalData(runway, 30);
+        console.log('✅ Historical data loaded:', data.length, 'readings');
 
-        // Transform ESP32 data format to chart format
+        // Transform data format to chart format
         const chartData = data.map((item) => ({
           date: new Date(item.timestamp).toISOString().split("T")[0],
           pressure: item.pressure,
@@ -47,12 +48,12 @@ export function ForecastHistory({ runway }: ForecastHistoryProps) {
           humidity: item.humidity,
           windSpeed: item.windSpeed,
           windDirection: item.windDirection,
-        }))
+        }));
 
-        setHistoricalData(chartData)
+        setHistoricalData(chartData);
       } catch (error) {
-        console.error("Error loading historical data:", error)
-        // Mock data for demonstration
+        console.error("Error loading historical data:", error);
+        // Mock data for demonstration if no data available
         const mockData = Array.from({ length: 30 }, (_, i) => ({
           date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           pressure: 1013 + Math.sin(i * 0.1) * 5 + Math.random() * 2,
@@ -60,24 +61,25 @@ export function ForecastHistory({ runway }: ForecastHistoryProps) {
           humidity: 75 + Math.sin(i * 0.15) * 10 + Math.random() * 5,
           windSpeed: 12 + Math.sin(i * 0.3) * 4 + Math.random() * 3,
           windDirection: 180 + Math.sin(i * 0.1) * 60 + Math.random() * 20,
-        }))
-        setHistoricalData(mockData)
+        }));
+        setHistoricalData(mockData);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadHistoricalData()
-  }, [runway])
+    loadHistoricalData();
+  }, [runway]);
 
   const handleExportData = async () => {
     try {
-      const endDate = new Date().toISOString()
-      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      const endDate = new Date().toISOString();
+      const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      // Try to get data from ESP32 API first
-      const apiClient = new ESP32ApiClient()
-      const blob = await apiClient.exportData(runway, startDate, endDate, exportFormat)
+      console.log('📥 Exporting data:', { startDate, endDate, format: exportFormat });
+      
+      // Get data from local API
+      const blob = await localApiClient.exportData(runway, startDate, endDate, exportFormat);
       
       if (blob) {
         const fileExtension = ExportUtils.getFileExtension(exportFormat)

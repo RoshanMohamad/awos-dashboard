@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Database, Wifi, AlertTriangle } from "lucide-react";
+import { localDB } from "@/lib/local-database";
 
 export function RealTimeDebugPanel() {
-  const { supabase } = useAuth();
   const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [stationIds, setStationIds] = useState<string[]>([]);
   const [recentData, setRecentData] = useState<any[]>([]);
@@ -16,40 +15,27 @@ export function RealTimeDebugPanel() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const checkDatabase = async () => {
-    if (!supabase) {
-      setDbStatus('error');
-      return;
-    }
-
     try {
       setDbStatus('checking');
+      await localDB.init();
 
-      // Check if table exists and get recent data
-      const { data: allData, error: allError } = await supabase
-        .from('sensor_readings')
-        .select('station_id, timestamp, temperature, humidity, pressure, wind_speed, wind_direction')
-        .order('timestamp', { ascending: false })
-        .limit(20);
-
-      if (allError) {
-        console.error('Database error:', allError);
-        setDbStatus('error');
-        return;
-      }
+      // Get recent data from IndexedDB
+      const allData = await localDB.getAll('sensor_readings');
+      
+      // Sort by timestamp (newest first) and limit to 20
+      const sortedData = allData
+        .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 20);
 
       setDbStatus('connected');
-      setRecentData(allData || []);
+      setRecentData(sortedData);
       
       // Get unique station IDs
-      const uniqueStations = [...new Set((allData || []).map((d: any) => d.station_id))];
+      const uniqueStations = [...new Set(allData.map((d: any) => d.station_id))];
       setStationIds(uniqueStations);
 
       // Get total count
-      const { count } = await supabase
-        .from('sensor_readings')
-        .select('id', { count: 'exact', head: true });
-
-      setTotalRecords(count || 0);
+      setTotalRecords(allData.length);
       setLastRefresh(new Date());
 
     } catch (error) {
@@ -93,8 +79,7 @@ export function RealTimeDebugPanel() {
 
   useEffect(() => {
     checkDatabase();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase]);
+  }, []);
 
   return (
     <div className="p-4 space-y-4">
@@ -127,7 +112,7 @@ export function RealTimeDebugPanel() {
                 <span className="text-red-800 font-medium">Database Connection Error</span>
               </div>
               <p className="text-red-700 mt-1 text-sm">
-                Check if Supabase environment variables are configured correctly.
+                Check if local IndexedDB database is initialized correctly.
               </p>
             </div>
           )}

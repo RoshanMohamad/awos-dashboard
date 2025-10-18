@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { SensorReadingModel } from '@/models/sensorReading'
+import { LocalSensorReadingModel } from '@/models/localSensorReading'
 
 // Query params: stationId (or runway for legacy), span=minute|hour|day, start, end
 export async function GET(req: Request) {
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
         }
 
         // Get aggregated data for the time period
-        const aggregatedData = await SensorReadingModel.getAggregatedData({
+        const aggregatedData = await LocalSensorReadingModel.getAggregatedData({
             stationId: stationId || undefined,
             startTime,
             endTime

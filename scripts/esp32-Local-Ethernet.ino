@@ -33,9 +33,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2COLED, -1);
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};  // MAC address
 
 // IMPORTANT: Set these to match your local network configuration
-IPAddress serverIP(192, 168, 1, 100);   // IP of PC running the dashboard server
+IPAddress serverIP(192, 168, 4, 5);     // IP of PC running the dashboard server
 IPAddress esp32IP(192, 168, 1, 177);    // Static IP for this ESP32
-IPAddress gateway(192, 168, 1, 1);       // Your router's gateway
+IPAddress gateway(192, 168, 1, 1);      // Your router's gateway
 IPAddress subnet(255, 255, 255, 0);      // Subnet mask
 IPAddress dns(192, 168, 1, 1);           // DNS (use router IP for local network)
 

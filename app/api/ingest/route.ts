@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { SensorReadingModel } from '@/models/sensorReading';
+import { LocalSensorReadingModel } from '@/models/localSensorReading';
 
 // Validation schema for sensor readings using Zod
 const SensorReadingSchema = z.object({
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
         // Validate the incoming data
         const validatedData = SensorReadingSchema.parse(body);
 
-        // Store in database using Supabase admin client (secure server-side)
-        const sensorReading = await SensorReadingModel.createServerSide(validatedData);
+        // Store in database using local IndexedDB (secure server-side)
+        const sensorReading = await LocalSensorReadingModel.createServerSide(validatedData);
 
         console.log('Successfully created sensor reading:', sensorReading.id);
 

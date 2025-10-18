@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import { SensorReadingModel } from '@/models/sensorReading'
+import { LocalSensorReadingModel } from '@/models/localSensorReading'
 
-// Using Server-Sent Events (SSE) with polling - Supabase Realtime can be integrated later
+// Using Server-Sent Events (SSE) with polling for local IndexedDB realtime updates
 export async function GET(req: Request) {
     const headers = new Headers({
         'Content-Type': 'text/event-stream',
@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
             // Get initial data
             try {
-                const initialData = await SensorReadingModel.findMany({
+                const initialData = await LocalSensorReadingModel.findMany({
                     stationId: stationId || undefined,
                     orderBy: 'desc',
                     limit: 10
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 
                 try {
                     // Get new readings since last timestamp
-                    const newReadings = await SensorReadingModel.findMany({
+                    const newReadings = await LocalSensorReadingModel.findMany({
                         stationId: stationId || undefined,
                         startTime: lastTimestamp,
                         orderBy: 'desc',

@@ -33,7 +33,7 @@ export function LoginPage() {
         console.error("Google sign-in error:", error);
         alert(`Sign-in failed: ${error.message}`);
       }
-      // Supabase will handle the redirect automatically
+      // Local auth will handle the redirect automatically
     } catch (error) {
       console.error("Error during Google sign-in:", error);
       alert("An unexpected error occurred during sign-in");

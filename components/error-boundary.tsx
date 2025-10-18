@@ -67,8 +67,8 @@ export class ErrorBoundary extends React.Component<
             <div className="text-sm text-muted-foreground mt-4">
               <p>If this error persists, please check:</p>
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Environment variables are configured in Vercel</li>
-                <li>Supabase project is active and accessible</li>
+                <li>Local server is running (npm run dev)</li>
+                <li>IndexedDB database is initialized correctly</li>
                 <li>Browser console for detailed error messages</li>
               </ul>
             </div>

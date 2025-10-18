@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SensorReadingModel } from '@/models/sensorReading'
+import { LocalSensorReadingModel } from '@/models/localSensorReading'
 
 export async function POST(request: NextRequest) {
     try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Create new sensor reading
-        const reading = await SensorReadingModel.createServerSide({
+        const reading = await LocalSensorReadingModel.createServerSide({
             stationId: body.stationId || 'VCBI',
             temperature: body.temperature,
             humidity: body.humidity,

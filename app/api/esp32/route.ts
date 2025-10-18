@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { SensorReadingModel } from '@/models/sensorReading';
-import { recordStats } from '@/lib/monitorStats';
 
-// ESP32 data validation schema - matches your ESP32 data format
+// ESP32 data validation schema
 const ESP32DataSchema = z.object({
     temperature: z.number(),
     humidity: z.number().min(0).max(100),
@@ -18,15 +16,60 @@ const ESP32DataSchema = z.object({
     stationId: z.string().default('VCBI-ESP32'),
 });
 
-// Store the latest ESP32 data in memory for real-time dashboard
+// In-memory storage for latest data (for quick access)
 let latestESP32Data: any = null;
 let lastUpdateTime = 0;
 
+// Import local database (will be used on client side through API)
+// For server-side, we'll use a simple file-based storage as backup
+const fs = require('fs').promises;
+const path = require('path');
+const DATA_DIR = path.join(process.cwd(), 'data');
+const READINGS_FILE = path.join(DATA_DIR, 'sensor_readings.json');
+
+// Ensure data directory exists
+async function ensureDataDir() {
+    try {
+        await fs.mkdir(DATA_DIR, { recursive: true });
+    } catch (error) {
+        // Directory already exists
+    }
+}
+
+// Save reading to JSON file (server-side backup)
+async function saveReadingToFile(reading: any) {
+    try {
+        await ensureDataDir();
+        
+        // Read existing data
+        let readings = [];
+        try {
+            const data = await fs.readFile(READINGS_FILE, 'utf-8');
+            readings = JSON.parse(data);
+        } catch (error) {
+            // File doesn't exist yet
+        }
+
+        // Add new reading
+        readings.unshift(reading);
+
+        // Keep only last 10000 readings
+        if (readings.length > 10000) {
+            readings = readings.slice(0, 10000);
+        }
+
+        // Save back to file
+        await fs.writeFile(READINGS_FILE, JSON.stringify(readings, null, 2));
+    } catch (error) {
+        console.error('Error saving to file:', error);
+    }
+}
+
 export async function POST(request: NextRequest) {
-    const startTime = Date.now()
+    const startTime = Date.now();
     
     try {
-        const body = await request.json()
+        const body = await request.json();
         
         console.log('📡 Received ESP32 data:', {
             stationId: body.stationId,
@@ -35,78 +78,62 @@ export async function POST(request: NextRequest) {
             pressure: `${body.pressure} hPa`,
             windSpeed: `${body.windSpeed} m/s`,
             windDirection: `${body.windDirection}°`
-        })
+        });
 
         // Validate the incoming ESP32 data
-        const validatedData = ESP32DataSchema.parse(body)
+        const validatedData = ESP32DataSchema.parse(body);
 
-        // Store latest data in memory for real-time access
+        // Create sensor reading object
+        const sensorReading = {
+            id: `reading_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            timestamp: new Date().toISOString(),
+            station_id: validatedData.stationId,
+            temperature: validatedData.temperature,
+            humidity: validatedData.humidity,
+            pressure: validatedData.pressure,
+            dew_point: validatedData.dewPoint,
+            wind_speed: validatedData.windSpeed,
+            wind_direction: validatedData.windDirection,
+            wind_gust: null,
+            visibility: null,
+            precipitation_1h: null,
+            precipitation_3h: null,
+            precipitation_6h: null,
+            precipitation_24h: null,
+            weather_code: null,
+            weather_description: null,
+            cloud_coverage: null,
+            cloud_base: null,
+            sea_level_pressure: null,
+            altimeter_setting: null,
+            battery_voltage: null,
+            solar_panel_voltage: null,
+            signal_strength: null,
+            data_quality: 'good',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+
+        // Store in memory for quick access
         latestESP32Data = {
             ...validatedData,
-            timestamp: new Date().toISOString(),
+            timestamp: sensorReading.timestamp,
             receivedAt: Date.now()
         };
         lastUpdateTime = Date.now();
 
-        // Convert ESP32 data format to match your database schema
-        const sensorReading = {
-            temperature: validatedData.temperature,
-            humidity: validatedData.humidity,
-            pressure: validatedData.pressure,
-            dewPoint: validatedData.dewPoint,
-            windSpeed: validatedData.windSpeed, // ESP32 sends m/s, convert to knots if needed
-            windDirection: validatedData.windDirection,
-            stationId: validatedData.stationId,
-            timestamp: new Date(),
-            dataQuality: 'good',
-            // Add GPS coordinates if available
-            ...(validatedData.lat && validatedData.lng && {
-                latitude: validatedData.lat,
-                longitude: validatedData.lng
-            })
-        };
+        // Save to file (server-side storage)
+        await saveReadingToFile(sensorReading);
 
-        // Store in database with timeout handling
-        let savedReading;
-        const dbTimeout = 15000; // 15 second timeout (increased for slow connection)
-        
-        try {
-            const dbPromise = SensorReadingModel.createServerSide(sensorReading);
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Database timeout')), dbTimeout)
-            );
+        const responseTime = Date.now() - startTime;
+        console.log(`✅ ESP32 data stored successfully in ${responseTime}ms`);
 
-            savedReading = await Promise.race([dbPromise, timeoutPromise]) as any;
-            
-            const responseTime = Date.now() - startTime;
-            console.log(`✅ ESP32 data stored successfully in ${responseTime}ms:`, savedReading.id);
-            
-            // Record success stats
-            recordStats(true, responseTime);
-
-            return NextResponse.json({
-                success: true,
-                data: savedReading,
-                message: 'ESP32 data received and stored successfully',
-                responseTime: `${responseTime}ms`
-            }, { status: 201 });
-
-        } catch (dbError: any) {
-            const responseTime = Date.now() - startTime;
-            console.error(`❌ Database operation failed after ${responseTime}ms:`, dbError.message);
-            
-            // Record failure stats
-            recordStats(false, responseTime, dbError.message);
-            
-            // Return success to ESP32 even if database fails (prevents ESP32 from retrying)
-            return NextResponse.json({
-                success: true,
-                message: 'ESP32 data received (database write pending)',
-                warning: 'Database temporarily unavailable',
-                responseTime: `${responseTime}ms`,
-                timestamp: new Date().toISOString()
-            }, { status: 202 }); // 202 = Accepted but not processed
-        }
+        return NextResponse.json({
+            success: true,
+            data: sensorReading,
+            message: 'ESP32 data received and stored successfully',
+            responseTime: `${responseTime}ms`
+        }, { status: 201 });
 
     } catch (error) {
         console.error('Error processing ESP32 data:', error);
@@ -130,12 +157,26 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// GET endpoint for real-time data (used by your dashboard)
+// GET endpoint for real-time data
 export async function GET() {
     try {
         // Check if data is fresh (within last 2 minutes)
         const dataAge = Date.now() - lastUpdateTime;
         const isDataFresh = dataAge < 120000; // 2 minutes
+
+        if (!latestESP32Data) {
+            // Try to load from file
+            try {
+                const data = await fs.readFile(READINGS_FILE, 'utf-8');
+                const readings = JSON.parse(data);
+                if (readings.length > 0) {
+                    latestESP32Data = readings[0];
+                    lastUpdateTime = new Date(latestESP32Data.timestamp).getTime();
+                }
+            } catch (error) {
+                // No file data available
+            }
+        }
 
         if (!latestESP32Data) {
             return NextResponse.json({
@@ -165,7 +206,7 @@ export async function GET() {
     }
 }
 
-// OPTIONS for CORS (allows your ESP32 to send data)
+// OPTIONS for CORS
 export async function OPTIONS() {
     return new NextResponse(null, {
         status: 200,
