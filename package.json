@@ -13,7 +13,10 @@
     "type-check": "tsc --noEmit",
     "mqtt-bridge": "node scripts/mqtt-bridge-standalone.js",
     "mqtt-bridge:dev": "MQTT_HOST=localhost API_BASE_URL=http://localhost:3000 node scripts/mqtt-bridge-standalone.js --verbose",
-    "mqtt-bridge:prod": "node scripts/mqtt-bridge-standalone.js --stats"
+    "mqtt-bridge:prod": "node scripts/mqtt-bridge-standalone.js --stats",
+    "init-db": "node scripts/init-local-database.js",
+    "detect-network": "node scripts/detect-network-config.js",
+    "local-setup": "node scripts/detect-network-config.js && node scripts/init-local-database.js"
   },
   "dependencies": {
     "@eslint/eslintrc": "^3.3.1",

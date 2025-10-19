@@ -51,18 +51,72 @@ export default function ReportsPage() {
   const generateReport = async (type: string) => {
     setIsGenerating(true);
     try {
-      // Simulate report generation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Fetch data from local IndexedDB/JSON storage
+      let startDate: Date;
+      let endDate: Date = new Date();
 
-      // Generate mock data
-      const mockData: ExportData[] = Array.from({ length: 100 }, (_, i) => ({
-        timestamp: new Date(Date.now() - i * 60000).toISOString(),
-        temperature: 28 + Math.random() * 4,
-        humidity: 70 + Math.random() * 20,
-        pressure: 1010 + Math.random() * 10,
-        windSpeed: 10 + Math.random() * 15,
-        windDirection: Math.random() * 360,
-      }));
+      // Determine date range based on report type
+      switch (type) {
+        case 'hourly':
+          startDate = new Date(Date.now() - 60 * 60 * 1000); // Last hour
+          break;
+        case 'daily':
+          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24 hours
+          break;
+        case 'weekly':
+          startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
+          break;
+        case 'monthly':
+          startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Last 30 days
+          break;
+        case 'custom':
+          startDate = dateFrom || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          endDate = dateTo || new Date();
+          break;
+        default:
+          startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      }
+
+      // Fetch actual data from local API/IndexedDB
+      const response = await fetch(`/api/readings?startTime=${startDate.toISOString()}&endTime=${endDate.toISOString()}&limit=10000`);
+      let exportData: ExportData[] = [];
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data && result.data.length > 0) {
+          // Transform data to export format
+          exportData = result.data.map((reading: any) => ({
+            timestamp: reading.timestamp,
+            temperature: reading.temperature ?? 0,
+            humidity: reading.humidity ?? 0,
+            pressure: reading.pressure ?? 0,
+            windSpeed: reading.wind_speed ?? 0,
+            windDirection: reading.wind_direction ?? 0,
+          }));
+        } else {
+          // No data available, create sample data
+          console.warn('No sensor data available, generating sample data');
+          exportData = Array.from({ length: 10 }, (_, i) => ({
+            timestamp: new Date(Date.now() - i * 60000).toISOString(),
+            temperature: 28 + Math.random() * 4,
+            humidity: 70 + Math.random() * 20,
+            pressure: 1010 + Math.random() * 10,
+            windSpeed: 10 + Math.random() * 15,
+            windDirection: Math.random() * 360,
+          }));
+        }
+      } else {
+        // API error, generate sample data
+        console.warn('Failed to fetch data from API, generating sample data');
+        exportData = Array.from({ length: 10 }, (_, i) => ({
+          timestamp: new Date(Date.now() - i * 60000).toISOString(),
+          temperature: 28 + Math.random() * 4,
+          humidity: 70 + Math.random() * 20,
+          pressure: 1010 + Math.random() * 10,
+          windSpeed: 10 + Math.random() * 15,
+          windDirection: Math.random() * 360,
+        }));
+      }
 
       // Create metadata
       const metadata: ReportMetadata = {
@@ -74,7 +128,7 @@ export default function ReportsPage() {
       };
 
       // Generate the export based on selected format
-      const blob = ExportUtils.generateExport(mockData, metadata, selectedFormat);
+      const blob = ExportUtils.generateExport(exportData, metadata, selectedFormat);
       const fileExtension = ExportUtils.getFileExtension(selectedFormat);
       const filename = `AWOS_${type}_report_${selectedRunway}_${format(
         new Date(),

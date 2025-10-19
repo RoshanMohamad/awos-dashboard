@@ -1,60 +1,80 @@
-# AWOS Dashboard
+# AWOS Dashboard - Local Edition
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/RoshanMohamad/awos-dashboard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Offline First](https://img.shields.io/badge/Offline-First-green.svg)](https://github.com/RoshanMohamad/awos-dashboard)
+[![No Internet Required](https://img.shields.io/badge/Internet-Not%20Required-blue.svg)](https://github.com/RoshanMohamad/awos-dashboard)
 
-A comprehensive **Automated Weather Observation System (AWOS)** dashboard built with modern web technologies. This full-stack application collects, processes, and visualizes weather data from IoT sensors, providing real-time monitoring and historical analysis capabilities.
+A comprehensive **Automated Weather Observation System (AWOS)** dashboard built for **100% offline operation**. This full-stack application runs entirely on your local network without any internet connection, collecting, processing, and visualizing weather data from ESP32 sensors via Ethernet.
 
-**🚀 Easy Deployment**: Deploy instantly to Vercel with one-click serverless deployment.
+**🔒 Fully Local**: No cloud services, no internet required - complete data privacy and offline operation.  
+**⚡ Real-Time**: ESP32 sends data every 10 seconds via Ethernet, dashboard updates every 2 seconds.  
+**💾 Local Storage**: All data stored in browser IndexedDB and local JSON files.
 
 ## ✨ Features
 
-### Core Functionality
+### 🔒 Local-First Architecture
 
-- **Real-time Data Collection**: Receive sensor data via HTTP API or MQTT
-- **Live Dashboard**: Real-time weather monitoring with interactive charts
-- **Historical Analysis**: Trend analysis and data visualization
-- **Multi-station Support**: Handle multiple weather stations
+- **100% Offline Operation**: No internet connection required - ever!
+- **Local Network Only**: ESP32 ↔ PC communication via Ethernet (192.168.1.x subnet)
+- **IndexedDB Storage**: All data stored locally in browser database
+- **Local Authentication**: SHA-256 password hashing, no OAuth, no cloud auth
+- **Privacy First**: All your weather data stays on your local machine
+
+### 📡 Real-Time Data Collection
+
+- **ESP32 Ethernet**: W5500 module with static IP configuration
+- **HTTP POST**: ESP32 sends data every 10 seconds to local server
+- **Automatic Polling**: Dashboard updates every 2 seconds
+- **Live Monitoring**: Real-time temperature, humidity, pressure, wind data
+- **LoRa Support**: Built-in support for LoRa sensor communication
+
+### 📊 Dashboard Features
+
+- **Real-Time Dashboard**: Live weather monitoring with interactive charts
+- **Historical Analysis**: Trend analysis and data visualization from local database
+- **Multi-Station Support**: Handle multiple weather stations with unique IDs
 - **Data Quality Management**: Sensor health monitoring and data validation
-- **Offline Persistence**: SPIFFS-based queuing for ESP32 devices
+- **Export Functionality**: Export data to CSV/JSON from local storage
 
-### User Interface
+### 💻 User Interface
 
 - **Responsive Design**: Mobile-first approach with Tailwind CSS
 - **Dark/Light Mode**: Theme switching support
 - **Interactive Charts**: Recharts-powered visualizations
-- **Progressive Web App**: Installable PWA with offline capabilities
-- **Real-time Updates**: Server-Sent Events (SSE) for live data
+- **Real-time Updates**: Live polling every 2 seconds
+- **Alert System**: Automatic alerts for extreme weather conditions
 
-### Technology Stack
+### 🛠️ Technology Stack
 
 #### Frontend
 - **Next.js 15**: App Router with TypeScript
-- **Supabase Integration**: PostgreSQL database with real-time subscriptions
-- **API Routes**: RESTful endpoints for data ingestion and retrieval
-- **MQTT Bridge**: Connect IoT devices via MQTT protocol
+- **IndexedDB**: Browser-based local database (no cloud)
+- **API Routes**: RESTful endpoints for local data ingestion
+- **Local Storage**: Session tokens and user preferences
 
 #### Backend
-- **Database**: Supabase (PostgreSQL)
-- **ORM**: Prisma (optional, for complex queries)
-- **Authentication**: Supabase Auth
-- **Real-time**: Server-Sent Events (SSE)
-- **Validation**: Zod schemas
+- **Database**: IndexedDB (browser) + JSON files (server-side backup)
+- **Authentication**: Local SHA-256 password hashing
+- **Real-time**: Polling-based updates (every 2 seconds)
+- **Validation**: Zod schemas for data validation
+- **Storage**: Dual-layer (browser IndexedDB + local JSON files)
 
 #### IoT Integration
-- **MQTT**: Eclipse Mosquitto broker
-- **HTTP Client**: Built-in fetch API
-- **Device**: ESP32 with Arduino framework
-- **Sensors**: DHT22, BMP280, analog sensors
+- **Protocol**: HTTP POST over Ethernet (no WiFi, no internet)
+- **Hardware**: ESP32 with W5500 Ethernet module
+- **Communication**: LoRa receiver for sensor data
+- **Display**: OLED SSD1306 for status monitoring
+- **Sensors**: Temperature, humidity, pressure, wind speed/direction
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local-Only Setup)
 
 ### Prerequisites
 
-- Node.js 18+
-- npm, pnpm, or yarn
-- Supabase account (for database)
-- Git
+- **Node.js 18+** (for running the Next.js server)
+- **npm** or **pnpm** or **yarn**
+- **ESP32 with W5500 Ethernet module** (for hardware integration)
+- **Local network setup** (Router with Ethernet ports)
+- **No internet required!** ❌🌐
 
 ### 1. Clone and Install
 
@@ -69,40 +89,19 @@ npm install
 pnpm install
 ```
 
-### 2. Environment Setup
+### 2. Find Your PC IP Address
 
-```bash
-# Copy environment template
-cp .env.example .env.local
+```cmd
+# Windows
+ipconfig
 
-# Edit with your values
-nano .env.local
+# Look for "IPv4 Address" under your network adapter
+# Example: 192.168.1.100
 ```
 
-Required environment variables:
+**Write down your PC's IP address - you'll need it for ESP32 configuration!**
 
-```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# Application
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-NODE_ENV=development
-```
-
-### 3. Database Setup
-
-```bash
-# Generate Supabase types (optional)
-npx supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase.ts
-
-# Or use the provided setup script
-node scripts/setup-database.ts
-```
-
-### 4. Development Server
+### 3. Start the Local Server
 
 ```bash
 # Start development server
@@ -110,128 +109,328 @@ npm run dev
 # or
 pnpm dev
 
-# Open http://localhost:3000
+# Server will start on http://localhost:3000
+# Also accessible via your local IP: http://192.168.1.100:3000
 ```
 
-### 5. Test Data (Optional)
+### 4. Default Login Credentials
 
-```bash
-# Generate sample weather data
-npm run seed-data
+Open your browser and navigate to:
+- **URL**: `http://localhost:3000` or `http://YOUR_PC_IP:3000`
+- **Email**: `admin@local.awos`
+- **Password**: `admin123`
 
-# Or generate test data
-node scripts/generate-test-data.js
+**⚠️ Change the default password after first login!**
+
+### 5. Configure ESP32 (See ESP32 Setup section below)
+
+The ESP32 code is in `scripts/esp32-Local-Ethernet.ino`. You need to:
+1. Set your PC's IP address (from step 2)
+2. Set ESP32's static IP
+3. Set your router's gateway IP
+4. Upload to ESP32 via Arduino IDE
+
+### 6. Verify Connection
+
+1. **Check ESP32 Serial Monitor**: Should show "Connected to server"
+2. **Check Dashboard**: Go to http://localhost:3000/dashboard
+3. **Check Debug Panel**: Go to http://localhost:3000/debug
+4. **Data should appear every 10 seconds!** ✅
+
+### 🎯 Network Configuration Summary
+
+```
+┌─────────────────────────────────────────────────┐
+│  Router (192.168.1.1)                           │
+│    ├─ ESP32 (192.168.1.177) - via Ethernet      │
+│    └─ PC (192.168.1.100) - via Ethernet/WiFi    │
+│                                                  │
+│  NO INTERNET CONNECTION REQUIRED! ❌🌐          │
+└─────────────────────────────────────────────────┘
 ```
 
-## 📡 IoT Device Setup
+## 📡 ESP32 Hardware Setup
 
-### ESP32 Configuration
+### Required Hardware
 
-1. **Install Arduino IDE** or **PlatformIO**
-2. **Install required libraries**:
-   - WiFi
-   - HTTPClient
-   - ArduinoJson
-   - DHT sensor library
-   - Adafruit BMP280
+- **ESP32 Development Board** (any variant)
+- **W5500 Ethernet Module** (for wired network connection)
+- **OLED Display** - SSD1306 128x64 (optional, for status display)
+- **LoRa Module** - For receiving sensor data (optional)
+- **Rotary Encoder** - For UI navigation (optional)
+- **Ethernet Cable** - Cat5e or better
+- **5V Power Supply** - For ESP32
 
-3. **Configure the device**:
-   ```cpp
-   const char* WIFI_SSID = "YOUR_WIFI_SSID";
-   const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
-   const char* INGEST_URL = "http://localhost:3000/api/ingest";
-   const char* STATION_ID = "VCBI";
-   ```
+### Wiring Diagram
 
-4. **Flash and monitor**:
-   ```bash
-   # Monitor serial output
-   # Check for successful HTTP POSTs and NTP sync
-   ```
-
-### MQTT Bridge (Alternative)
-
-```bash
-# Start MQTT broker and bridge
-docker-compose up -d
-
-# Test MQTT publishing
-mosquitto_pub -h localhost -t "awos/readings/VCBI" -m '{
-  "temperature": 28.5,
-  "humidity": 65.2,
-  "pressure": 1013.2,
-  "windSpeed": 12.5,
-  "stationId": "VCBI"
-}'
 ```
+ESP32 → W5500 Ethernet Module
+  GPIO 5  → CS (Chip Select)
+  GPIO 23 → MOSI
+  GPIO 19 → MISO
+  GPIO 18 → SCK (Clock)
+  GPIO 26 → RST (Reset, optional)
+  3.3V    → VCC
+  GND     → GND
+
+ESP32 → OLED Display (I2C)
+  GPIO 21 → SDA
+  GPIO 22 → SCL
+  3.3V    → VCC
+  GND     → GND
+
+ESP32 → Rotary Encoder (optional)
+  GPIO 13 → CLK
+  GPIO 14 → DT
+  GPIO 25 → SW (Button)
+```
+
+### Arduino IDE Setup
+
+1. **Install Arduino IDE** (version 1.8.x or 2.x)
+
+2. **Add ESP32 Board Support**:
+   - Go to File → Preferences
+   - Add to "Additional Board Manager URLs":
+     ```
+     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+     ```
+   - Go to Tools → Board → Boards Manager
+   - Search "esp32" and install "ESP32 by Espressif Systems"
+
+3. **Install Required Libraries**:
+   - Sketch → Include Library → Manage Libraries
+   - Install the following:
+     - **Ethernet** (by Ethernet)
+     - **ArduinoJson** (by Benoit Blanchon)
+     - **Adafruit GFX Library**
+     - **Adafruit SSD1306**
+     - **SPI** (built-in)
+
+### ESP32 Code Configuration
+
+Open `scripts/esp32-Local-Ethernet.ino` and update these lines:
+
+```cpp
+// ⚠️ CRITICAL: Change these IP addresses!
+
+// Line 36: Your PC's IP address (from ipconfig)
+IPAddress serverIP(192, 168, 1, 100);   // ← CHANGE THIS!
+
+// Line 37: ESP32's static IP (unique on your network)
+IPAddress esp32IP(192, 168, 1, 177);    // ← CHANGE THIS!
+
+// Line 38: Your router's IP address
+IPAddress gateway(192, 168, 1, 1);      // ← Usually this
+
+// Port and endpoint (usually don't change)
+const int SERVER_PORT = 3000;
+const char* API_ENDPOINT = "/api/esp32";
+```
+
+### Upload to ESP32
+
+1. **Connect ESP32** to PC via USB
+2. **Select Board**: Tools → Board → ESP32 Dev Module
+3. **Select Port**: Tools → Port → (your ESP32 port)
+4. **Upload**: Click Upload button (→)
+5. **Open Serial Monitor**: Tools → Serial Monitor (115200 baud)
+
+### Verify Connection
+
+You should see in Serial Monitor:
+
+```
+=== ESP32 AWOS Receiver (Local Ethernet) ===
+📡 Initializing Ethernet...
+✅ Ethernet connected!
+   ESP32 IP: 192.168.1.177
+   Server IP: 192.168.1.100:3000
+✅ System Ready
+Waiting for LoRa data...
+
+📤 Sending data to server...
+✅ Connected to server
+📊 Sent: {"stationId":"VCBI-ESP32",...}
+📥 Response: HTTP/1.1 201 Created
+✅ Data sent successfully
+```
+
+### Troubleshooting ESP32
+
+**Problem**: "Ethernet cable not connected"
+- ✅ Check Ethernet cable is plugged in
+- ✅ Check W5500 module wiring
+- ✅ Check power to W5500 module
+
+**Problem**: "Connection to server failed"
+- ✅ Verify PC IP address is correct (run `ipconfig`)
+- ✅ Verify PC firewall allows port 3000
+- ✅ Verify Next.js server is running
+- ✅ Ping PC from another device: `ping 192.168.1.100`
+
+**Problem**: "Connected to server" but no data in dashboard
+- ✅ Check ESP32 IP is on same subnet as PC (192.168.1.x)
+- ✅ Check server IP in code matches your PC IP
+- ✅ Check browser console for errors (F12)
+- ✅ Check `/api/esp32` endpoint: http://localhost:3000/api/esp32
 
 ## 🔧 Configuration
 
-### Environment Variables
+### Network Configuration (Most Important!)
 
-| Variable                        | Description                          | Required |
-| ------------------------------- | ------------------------------------ | -------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL                 | Yes      |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key               | Yes      |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase service role key            | Yes      |
-| `NEXT_PUBLIC_BASE_URL`          | Application base URL                 | Yes      |
-| `NODE_ENV`                      | Environment (development/production) | No       |
-| `PORT`                          | Server port (default: 3000)          | No       |
-
-### Sensor Configuration
-
-Update sensor pin definitions in `scripts/esp32-server-example.ino`:
+**For ESP32** (`scripts/esp32-Local-Ethernet.ino` lines 36-40):
 
 ```cpp
-#define DHT_PIN 4
-#define DHT_TYPE DHT22
-#define WIND_SPEED_PIN 2
-#define WIND_DIRECTION_PIN A0
-#define BATTERY_PIN A1
-#define CEB_POWER_PIN 5
+// Find your PC IP: Run 'ipconfig' in Windows Command Prompt
+IPAddress serverIP(192, 168, 1, 100);   // ← Your PC's IP address
+IPAddress esp32IP(192, 168, 1, 177);    // ← ESP32's static IP (make unique)
+IPAddress gateway(192, 168, 1, 1);      // ← Your router's IP
+IPAddress subnet(255, 255, 255, 0);     // ← Usually this
+IPAddress dns(192, 168, 1, 1);          // ← Usually same as gateway
 ```
 
-## 📊 API Documentation
+**For Multiple ESP32 Devices**:
 
-### Data Ingestion
+```cpp
+// Device 1
+IPAddress serverIP(192, 168, 1, 100);
+IPAddress esp32IP(192, 168, 1, 177);
 
-**POST** `/api/ingest`
-Accepts sensor readings in JSON format:
+// Device 2
+IPAddress serverIP(192, 168, 1, 100);   // Same server
+IPAddress esp32IP(192, 168, 1, 178);    // Different IP!
+
+// Device 3
+IPAddress serverIP(192, 168, 1, 100);   // Same server
+IPAddress esp32IP(192, 168, 1, 179);    // Different IP!
+```
+
+### Server Configuration
+
+**Default Port**: 3000 (Next.js development server)
+
+To change port:
+```bash
+# In package.json, modify "dev" script:
+"dev": "next dev -p 3001"  # Use port 3001 instead
+```
+
+### Authentication Configuration
+
+**Default Credentials**:
+- Email: `admin@local.awos`
+- Password: `admin123`
+
+**To change default password**:
+Edit `lib/local-auth.ts` line 51:
+```typescript
+const defaultPassword = 'your_new_password'; // Change this!
+```
+
+### Database Configuration
+
+**IndexedDB** (browser-based):
+- Database Name: `awos_database`
+- Version: 1
+- Stores: `sensor_readings`, `users`, `sessions`, `stations`, `aggregates`
+
+**JSON Backup** (server-side):
+- Location: `data/sensor_readings.json`
+- Max records: 10,000
+- Auto-cleanup: Oldest records removed first
+
+### Data Collection Intervals
+
+**ESP32 Settings** (`esp32-Local-Ethernet.ino` lines 79-81):
+
+```cpp
+const unsigned long OLED_UPDATE_INTERVAL = 1000;   // OLED updates: 1 second
+const unsigned long DATA_SEND_INTERVAL = 10000;    // Send to server: 10 seconds
+const unsigned long LORA_TIMEOUT = 60000;          // LoRa timeout: 1 minute
+```
+
+**Dashboard Settings** (`hooks/use-local-realtime-data.ts` line 161):
+
+```typescript
+// Dashboard polls every 2 seconds for real-time updates
+pollingRef.current = setInterval(() => {
+    refreshData();
+}, 2000);  // Change to 5000 for 5-second updates
+```
+
+## 📊 API Documentation (Local-Only)
+
+### ESP32 Data Ingestion
+
+**POST** `/api/esp32`
+
+ESP32 sends sensor data to this endpoint every 10 seconds:
 
 ```json
 {
+  "stationId": "VCBI-ESP32",
   "temperature": 28.5,
   "humidity": 65.2,
   "pressure": 1013.2,
+  "dewPoint": 18.3,
   "windSpeed": 12.5,
   "windDirection": 180,
-  "windGust": 15.0,
-  "visibility": 10000,
-  "precipitation1h": 0.0,
-  "weatherCode": 800,
-  "weatherDescription": "Clear sky",
-  "stationId": "VCBI",
-  "timestamp": "2025-08-26T12:00:00Z",
-  "dataQuality": "good"
+  "lat": 6.7877,
+  "lng": 79.8840
 }
 ```
 
-### Data Retrieval
+**Response (Success)**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "reading_1729234567890_abc123",
+    "timestamp": "2025-10-18T12:00:00.000Z",
+    "station_id": "VCBI-ESP32",
+    "temperature": 28.5,
+    ...
+  },
+  "message": "ESP32 data received and stored successfully",
+  "responseTime": "15ms"
+}
+```
+
+### Data Retrieval (Local)
+
+**GET** `/api/esp32`
+
+Get latest ESP32 data:
+
+```json
+{
+  "success": true,
+  "data": {
+    "temperature": 28.5,
+    "humidity": 65.2,
+    "timestamp": "2025-10-18T12:00:00.000Z",
+    "dataAge": 5000,
+    "isDataFresh": true,
+    "connectionStatus": "connected"
+  }
+}
+```
 
 **GET** `/api/readings`
-Retrieve sensor readings with optional filtering:
+
+Query historical data from local IndexedDB:
 
 Query parameters:
-- `stationId`: Filter by station
-- `startTime`: Start timestamp (ISO format)
-- `endTime`: End timestamp (ISO format)
-- `limit`: Maximum number of records (default: 100)
+- `stationId`: Filter by station (optional)
+- `startTime`: Start timestamp ISO format (optional)
+- `endTime`: End timestamp ISO format (optional)
+- `limit`: Max records (default: 100)
 - `offset`: Pagination offset (default: 0)
 
-### Real-time Updates
-
 **GET** `/api/realtime`
-Server-Sent Events endpoint for real-time data:
+
+Server-Sent Events for real-time updates (polls every 5 seconds):
 
 ```javascript
 const eventSource = new EventSource("/api/realtime");
@@ -241,76 +440,296 @@ eventSource.onmessage = (event) => {
 };
 ```
 
-### Health Check
+### Health & Monitoring
 
-**GET** `/api/health`
-Application health status:
+**GET** `/api/db/health`
+
+Check local database health:
 
 ```json
 {
   "status": "healthy",
-  "timestamp": "2025-08-26T12:00:00Z",
-  "uptime": 3600,
-  "memory": {
-    "used": 45.2,
-    "total": 128.0
+  "database": {
+    "type": "IndexedDB",
+    "name": "awos_database",
+    "version": 1
   },
-  "environment": "production"
+  "stores": {
+    "sensor_readings": 150,
+    "users": 1,
+    "sessions": 1,
+    "stations": 1,
+    "aggregates": 0
+  }
 }
 ```
 
-## 🚀 Deployment
+**GET** `/api/aggregates`
 
-### Vercel (Recommended)
+Get aggregated statistics from local data:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/RoshanMohamad/awos-dashboard)
-
-**Simple, serverless deployment with automatic scaling:**
-
-- ✅ One-click deployment
-- ✅ Automatic deployments on push
-- ✅ Preview deployments for PRs
-- ✅ Global CDN & SSL included
-- ✅ Serverless functions
-- ✅ Custom domains
-
-### Troubleshooting
-
-**Build Error: "supabaseUrl is required"**
-- Go to your Vercel project dashboard
-- Navigate to Settings → Environment Variables
-- Add the required Supabase environment variables
-- Redeploy from the Deployments tab
-
-## 🧪 Testing
-
-### Unit Tests
-
-```bash
-# Run tests (when implemented)
-npm run test
+```json
+{
+  "count": 100,
+  "avgTemperature": 27.5,
+  "avgHumidity": 65.0,
+  "avgPressure": 1013.2,
+  "avgWindSpeed": 8.5,
+  "maxWindGust": 15.0
+}
 ```
 
-### Integration Tests
+## 🚀 Deployment (Local Network)
+
+### Option 1: Development Server (Recommended for Local Use)
+
+**Always running on your PC:**
 
 ```bash
-# Test API endpoints
-npm run test-api
+# Start the server
+npm run dev
 
-# Test health endpoint
-curl http://localhost:3000/api/health
+# Server runs on:
+# - http://localhost:3000 (from same PC)
+# - http://192.168.1.100:3000 (from other devices on network)
+```
+
+**Auto-start on Windows boot:**
+
+1. Create `start-awos.bat`:
+   ```batch
+   @echo off
+   cd /d "d:\profosional projects\awos-dashboard"
+   start cmd /k npm run dev
+   ```
+
+2. Press `Win+R`, type `shell:startup`, press Enter
+
+3. Copy `start-awos.bat` to the Startup folder
+
+### Option 2: Production Build (Faster)
+
+```bash
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+
+# Runs on port 3000
+```
+
+### Option 3: Run as Windows Service
+
+Use **NSSM** (Non-Sucking Service Manager):
+
+```powershell
+# Download NSSM from https://nssm.cc/download
+
+# Install as service
+nssm install AWOSDashboard "C:\Program Files\nodejs\npm.cmd" "run start"
+nssm set AWOSDashboard AppDirectory "d:\profosional projects\awos-dashboard"
+nssm start AWOSDashboard
+
+# Service will auto-start on Windows boot
+```
+
+### Option 4: Docker Container (Advanced)
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+```bash
+# Build and run
+docker build -t awos-dashboard .
+docker run -d -p 3000:3000 --name awos awos-dashboard
+```
+
+### Access from Other Devices
+
+Once server is running, access from:
+
+- **Same PC**: `http://localhost:3000`
+- **Mobile phone** (on same network): `http://192.168.1.100:3000`
+- **Tablet**: `http://192.168.1.100:3000`
+- **Another PC**: `http://192.168.1.100:3000`
+
+**⚠️ Important**: Replace `192.168.1.100` with your actual PC IP address!
+
+### Firewall Configuration
+
+**Windows Firewall** may block port 3000. To allow:
+
+```powershell
+# Run as Administrator
+netsh advfirewall firewall add rule name="AWOS Dashboard" dir=in action=allow protocol=TCP localport=3000
+```
+
+Or manually:
+1. Open Windows Defender Firewall
+2. Advanced Settings → Inbound Rules → New Rule
+3. Port → TCP → Specific local ports: 3000
+4. Allow the connection → Apply to all profiles
+5. Name: "AWOS Dashboard"
+
+## 🧪 Testing & Verification
+
+### Test ESP32 Connection
+
+```bash
+# Windows Command Prompt
+curl http://localhost:3000/api/esp32
+
+# Should return latest ESP32 data or 404 if no data yet
+```
+
+### Test Real-Time Updates
+
+1. Open browser console (F12)
+2. Navigate to http://localhost:3000/dashboard
+3. You should see logs every 2 seconds:
+   ```
+   🔄 Polling for sensor data...
+   ✅ Data refreshed: {temp: 28.5, humidity: 65, pressure: 1013}
+   ```
+
+### Test Local Database
+
+Open browser console (F12) and run:
+
+```javascript
+// Open IndexedDB
+const request = indexedDB.open('awos_database', 1);
+
+request.onsuccess = (event) => {
+  const db = event.target.result;
+  const tx = db.transaction('sensor_readings', 'readonly');
+  const store = tx.objectStore('sensor_readings');
+  const getAllRequest = store.getAll();
+  
+  getAllRequest.onsuccess = () => {
+    console.log('Total readings:', getAllRequest.result.length);
+    console.log('Latest:', getAllRequest.result[0]);
+  };
+};
+```
+
+### Verify Network Connectivity
+
+```cmd
+# From Windows Command Prompt
+
+# 1. Check your PC IP
+ipconfig
+
+# 2. Ping your router
+ping 192.168.1.1
+
+# 3. Check if Next.js server is running
+netstat -an | findstr :3000
+
+# Should show: TCP    0.0.0.0:3000    0.0.0.0:0    LISTENING
+```
+
+### Test Data Export
+
+1. Navigate to http://localhost:3000/forecast
+2. Click "Export CSV" or "Export JSON"
+3. File should download with local data
+
+### Manual Data Injection (Testing)
+
+```bash
+# Windows PowerShell
+Invoke-WebRequest -Uri "http://localhost:3000/api/esp32" -Method POST -ContentType "application/json" -Body '{"stationId":"TEST","temperature":25.5,"humidity":60,"pressure":1013,"dewPoint":18,"windSpeed":5,"windDirection":180}'
+
+# Should see data appear in dashboard
+```
+
+## 📚 Additional Documentation
+
+- **[Local Setup Guide](docs/LOCAL_SETUP_GUIDE.md)** - Detailed local setup instructions
+- **[ESP32 Setup Guide](docs/ESP32_SETUP_GUIDE.md)** - Complete ESP32 hardware setup
+- **[Verification Guide](docs/COMPLETE_LOCAL_VERIFICATION.md)** - Test all features
+- **[Model Migration](docs/LOCAL_MODEL_MIGRATION.md)** - Database model documentation
+
+## 🔧 Troubleshooting
+
+### ESP32 Not Connecting
+
+**Symptom**: Serial monitor shows "Ethernet cable not connected"
+
+**Solutions**:
+- ✅ Check Ethernet cable is properly plugged in
+- ✅ Verify W5500 module wiring (SPI pins)
+- ✅ Check 3.3V power to W5500 module
+- ✅ Try different Ethernet cable
+
+### ESP32 Connected But No Data
+
+**Symptom**: "Connected to server" but dashboard shows no data
+
+**Solutions**:
+- ✅ Verify `serverIP` in ESP32 code matches your PC IP
+- ✅ Run `ipconfig` to confirm PC IP hasn't changed
+- ✅ Check Windows Firewall allows port 3000
+- ✅ Verify Next.js server is running (`npm run dev`)
+- ✅ Check browser console for errors (F12)
+
+### Dashboard Not Updating
+
+**Symptom**: Dashboard shows old data or "No data available"
+
+**Solutions**:
+- ✅ Check browser console (F12) for polling logs
+- ✅ Navigate to http://localhost:3000/debug to see raw data
+- ✅ Verify IndexedDB has data (browser DevTools → Application → IndexedDB)
+- ✅ Clear browser cache and reload (Ctrl+Shift+R)
+
+### Login Not Working
+
+**Symptom**: "Invalid credentials" error
+
+**Solutions**:
+- ✅ Use default credentials: `admin@local.awos` / `admin123`
+- ✅ Check browser console (F12) for detailed error messages
+- ✅ Clear browser data and retry
+- ✅ Verify IndexedDB is enabled in browser
+
+### Port 3000 Already in Use
+
+**Symptom**: "Port 3000 is already in use"
+
+**Solutions**:
+```bash
+# Find what's using port 3000
+netstat -ano | findstr :3000
+
+# Kill the process (replace PID with actual process ID)
+taskkill /PID <PID> /F
+
+# Or use a different port
+npm run dev -- -p 3001
 ```
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these steps:
+We welcome contributions! This project is specifically designed for **offline, local-network operation**.
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** and test thoroughly
-4. **Commit your changes**: `git commit -m 'Add amazing feature'`
-5. **Push to the branch**: `git push origin feature/amazing-feature`
-6. **Open a Pull Request**
+Please ensure:
+- ✅ No cloud dependencies
+- ✅ No internet-required features
+- ✅ All data stored locally (IndexedDB or JSON files)
+- ✅ Works on local network (192.168.x.x)
 
 ## 📝 License
 
@@ -319,152 +738,45 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Next.js Team** for the amazing framework
-- **Supabase** for the excellent backend-as-a-service
 - **shadcn/ui** for the beautiful component library
 - **Tailwind CSS** for the utility-first CSS framework
-- **Arduino Community** for IoT development resources
+- **Arduino/ESP32 Community** for IoT development resources
+- **IndexedDB API** for local browser storage
 
 ## 📞 Support
 
 If you have questions or need help:
-- **Documentation**: Check the `docs/` directory
-- **Issues**: Open a GitHub issue
-- **Discussions**: Use GitHub Discussions for questions
-- **ESP32 Setup**: See `scripts/README.md` for IoT integration
+- **Documentation**: Check the `docs/` directory for comprehensive guides
+- **Issues**: Open a GitHub issue with detailed description
+- **ESP32 Setup**: See `scripts/esp32-Local-Ethernet.ino` for hardware integration
+- **Network Issues**: Verify all devices are on same subnet (192.168.1.x)
+
+## 🎯 Key Differences from Cloud Version
+
+This is the **LOCAL-ONLY** edition:
+
+| Feature | Cloud Version | Local Edition |
+|---------|--------------|---------------|
+| Database | Supabase (PostgreSQL) | IndexedDB + JSON files |
+| Authentication | Supabase Auth | Local SHA-256 |
+| Real-time | Supabase Realtime | Polling (2 seconds) |
+| ESP32 Connection | WiFi + Internet | Ethernet (Local only) |
+| Data Storage | Cloud servers | Your PC only |
+| Internet Required | ✅ Yes | ❌ No |
+| Data Privacy | Shared with cloud | 100% local |
+| Monthly Cost | $0-25+ | $0 (free forever) |
+
+## 🌟 Why Local-Only?
+
+- **🔒 Complete Privacy**: Your weather data never leaves your network
+- **⚡ Faster**: No internet latency, instant local responses
+- **💰 Free**: No cloud subscription fees
+- **🔌 Offline**: Works without internet - perfect for remote locations
+- **🛡️ Secure**: No external access, completely isolated
+- **📊 Full Control**: All data on your machine, export anytime
 
 ---
 
-**Happy Weather Monitoring! 🌤️**
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
+**Happy Local Weather Monitoring! 🌤️**
 
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
-
-```bash
-supabase bootstrap
-```
-
-Or using npx:
-
-```bash
-npx supabase bootstrap
-```
-
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
-```
+*Built with ❤️ for offline-first weather observation*

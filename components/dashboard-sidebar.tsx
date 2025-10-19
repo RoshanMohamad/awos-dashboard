@@ -132,7 +132,10 @@ export function Sidebar({
                       activeTab === "forecast" &&
                       "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
                   )}
-                  onClick={() => handleTabClick("02", "forecast")}
+                  onClick={() => {
+                router.push("/forecast");
+                onClose();
+              }}
                 >
                   ▶ Forecast & History
                 </Button>
@@ -184,7 +187,10 @@ export function Sidebar({
                       activeTab === "forecast" &&
                       "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
                   )}
-                  onClick={() => handleTabClick("04", "forecast")}
+                  onClick={() => {
+                router.push("/forecast");
+                onClose();
+              }}
                 >
                   ▶ Forecast & History
                 </Button>

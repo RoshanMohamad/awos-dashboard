@@ -28,8 +28,9 @@ export default function GlobalError({
             <div className="p-4 bg-muted rounded-md text-left">
               <h3 className="font-medium mb-2">Possible causes:</h3>
               <ul className="text-sm space-y-1">
-                <li>• Supabase environment variables not configured</li>
-                <li>• Network connectivity issues</li>
+                <li>• Local database (IndexedDB) initialization failed</li>
+                <li>• Browser storage quota exceeded</li>
+                <li>• Local network connectivity issues (ESP32 → PC)</li>
                 <li>• Server configuration problems</li>
               </ul>
             </div>
