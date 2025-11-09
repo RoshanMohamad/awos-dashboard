@@ -13,7 +13,13 @@ const ESP32DataSchema = z.object({
     windDirection: z.number().min(0).max(360),
     lat: z.number().optional(),
     lng: z.number().optional(),
+    utcDate: z.string().optional(),
     utcTime: z.string().optional(),
+    voltage: z.number().optional(),
+    current: z.number().optional(),
+    power: z.number().optional(),
+    powerStatus: z.string().optional(),
+    commMode: z.string().optional(),
     lastPacketTime: z.number().optional(),
     stationId: z.string().default('VCBI-ESP32'),
 });
@@ -30,11 +36,20 @@ export async function POST(request: NextRequest) {
         
         console.log('📡 Received ESP32 data:', {
             stationId: body.stationId,
+            utcDate: body.utcDate,
+            utcTime: body.utcTime,
             temperature: `${body.temperature}°C`,
             humidity: `${body.humidity}%`,
             pressure: `${body.pressure} hPa`,
             windSpeed: `${body.windSpeed} m/s`,
-            windDirection: `${body.windDirection}°`
+            windDirection: `${body.windDirection}°`,
+            voltage: body.voltage ? `${body.voltage}V` : 'N/A',
+            current: body.current ? `${body.current}A` : 'N/A',
+            power: body.power ? `${body.power}W` : 'N/A',
+            powerStatus: body.powerStatus || 'N/A',
+            commMode: body.commMode || 'N/A',
+            lat: body.lat,
+            lng: body.lng
         })
 
         // Validate the incoming ESP32 data
@@ -59,6 +74,23 @@ export async function POST(request: NextRequest) {
             stationId: validatedData.stationId,
             timestamp: new Date(),
             dataQuality: 'good',
+            // Map voltage/current/power to available database fields
+            ...(validatedData.voltage && {
+                batteryVoltage: validatedData.voltage
+            }),
+            ...(validatedData.current && {
+                solarVoltage: validatedData.current // Using solar_voltage field for current
+            }),
+            // Store power data and comm mode in qcFlags as JSON
+            ...(validatedData.power || validatedData.powerStatus || validatedData.commMode ? {
+                qcFlags: {
+                    power: validatedData.power,
+                    powerStatus: validatedData.powerStatus,
+                    commMode: validatedData.commMode,
+                    utcDate: validatedData.utcDate,
+                    utcTime: validatedData.utcTime
+                }
+            } : {}),
             // Add GPS coordinates if available
             ...(validatedData.lat && validatedData.lng && {
                 latitude: validatedData.lat,

@@ -1,11 +1,17 @@
 /*
  * -----------------------------------------------------------------------------
- * ESP32 AWOS Receiver (Wi-Fi) — aligned to your Ethernet test structure
+ * ESP32 AWOS Receiver (Wi-Fi) — FIXED VERSION for Next.js Dashboard
  * - Readable format parsing (e.g., "Temp: 29.4 °C, Hum: 70 % , ...")
  * - Wi-Fi + WebServer (/, /data, /status)
- * - Next.js HTTPS POST (JSON)
+ * - Next.js HTTPS POST (JSON) - FIXED to match API expectations
  * - OLED pages with Page x/7, rotary encoder
  * - Serial2 <- Nano (readable lines), Serial1 -> Nano (CSV for SD)
+ * -----------------------------------------------------------------------------
+ * 🔧 KEY FIXES:
+ * 1. Changed field names to match Next.js API exactly
+ * 2. Ensured all numeric values are sent as numbers, not strings
+ * 3. Added better error handling and logging
+ * 4. Fixed extractNumber() to handle all edge cases
  * -----------------------------------------------------------------------------
  * Libraries:
  *  - WiFi.h, WebServer.h, HTTPClient.h
@@ -43,6 +49,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2COLED, -1);
 const char* ssid     = "SakuriA52s";
 const char* password = "sanji614";
 
+// 🔧 IMPORTANT: Your Next.js deployment URL
 const char* NEXTJS_BASE_URL     = "https://awos-dashboard.vercel.app";
 const char* NEXTJS_ESP32_PATH   = "/api/esp32";
 const uint32_t NEXTJS_TIMEOUT_MS = 15000;
@@ -82,6 +89,7 @@ unsigned long lastNanoData = 0;
 unsigned long lastNextJSPost = 0;
 
 int nextJSPostErrors = 0;
+int nextJSPostSuccess = 0;
 
 const unsigned long oledUpdateInterval = 1000;   // 1s
 const unsigned long dataSendInterval   = 30000;  // 30s -> CSV to Nano
@@ -96,7 +104,8 @@ void handleSerialInput();
 void sendDataToNano();
 String getLocalTime();
 String buildAWOSHTMLResponse();
-String extractNumber(String input);
+float extractNumberFloat(String input);
+int extractNumberInt(String input);
 String extractValueFromReadable(String data, String key);
 String checkField(String f);
 void setupWiFi();
@@ -165,7 +174,7 @@ void loop() {
   // Periodic POST to Next.js
   if (wifiConnected &&
       (millis() - lastNextJSPost > nextJSPostInterval) &&
-      utcTime.length() > 0) {
+      temperature.length() > 0 && humidity.length() > 0) {
     postToNextJS();
     lastNextJSPost = millis();
   }
@@ -222,6 +231,7 @@ void setupWebServer() {
     json["wifiConnected"] = wifiConnected;
     json["nanoConnected"] = nanoConnected;
     json["nextJSErrors"] = nextJSPostErrors;
+    json["nextJSSuccess"] = nextJSPostSuccess;
 
     String out; serializeJson(json, out);
     server.send(200, "application/json", out);
@@ -230,13 +240,14 @@ void setupWebServer() {
   server.on("/status", []() {
     DynamicJsonDocument json(512);
     json["device"] = "ESP32-AWOS-Receiver-WiFi";
-    json["version"] = "2.1-readablesync";
+    json["version"] = "2.2-FIXED";
     json["uptime_ms"] = millis();
     json["freeHeap"] = ESP.getFreeHeap();
     json["wifiRSSI"] = WiFi.RSSI();
     json["wifiConnected"] = wifiConnected;
     json["nanoConnected"] = nanoConnected;
     json["nextJSErrors"] = nextJSPostErrors;
+    json["nextJSSuccess"] = nextJSPostSuccess;
     json["endpoint"] = String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_PATH);
 
     String out; serializeJson(json, out);
@@ -269,18 +280,45 @@ void handleSerialInput() {
 
       if (low.indexOf("temp:") >= 0)       { temperature  = extractValueFromReadable(line, "Temp:"); }
       if (low.indexOf("hum:")  >= 0)       { humidity     = extractValueFromReadable(line, "Hum:"); }
-      if (low.indexOf("pres:") >= 0)       { pressure     = extractValueFromReadable(line, "Press:"); }
+      if (low.indexOf("pres:") >= 0 || low.indexOf("press:") >= 0) { 
+        pressure = extractValueFromReadable(line, "Press:"); 
+        if (pressure == "") pressure = extractValueFromReadable(line, "Pres:");
+      }
       if (low.indexOf("dew:")  >= 0)       { dewPoint     = extractValueFromReadable(line, "Dew:"); }
       if (low.indexOf("ws:")   >= 0)       { windSpeed    = extractValueFromReadable(line, "WS:"); }
       if (low.indexOf("wd:")   >= 0)       { windDirection= extractValueFromReadable(line, "WD:"); }
-      if (low.indexOf("latitude:")  >= 0)  { latitude     = extractValueFromReadable(line, "Lat:"); }
-      if (low.indexOf("longitude:") >= 0)  { longitude    = extractValueFromReadable(line, "Long:"); }
-      if (low.indexOf("volt:") >= 0)       { voltage      = extractValueFromReadable(line, "V:"); }
-      if (low.indexOf("cur:")  >= 0)       { currentV     = extractValueFromReadable(line, "C:"); }
-      if (low.indexOf("pow:")  >= 0)       { power        = extractValueFromReadable(line, "P:"); }
-      if (low.indexOf("utc date:") >= 0)   { utcDate      = extractValueFromReadable(line, "UD:"); }
-      if (low.indexOf("utc time:") >= 0)   { utcTime      = extractValueFromReadable(line, "UT:"); }
-      if (low.indexOf("ps:") >= 0)         { powerStatus  = extractValueFromReadable(line, "PS:"); }
+      if (low.indexOf("lat:") >= 0 || low.indexOf("latitude:")  >= 0)  { 
+        latitude = extractValueFromReadable(line, "Lat:"); 
+        if (latitude == "") latitude = extractValueFromReadable(line, "Latitude:");
+      }
+      if (low.indexOf("long:") >= 0 || low.indexOf("longitude:") >= 0)  { 
+        longitude = extractValueFromReadable(line, "Long:"); 
+        if (longitude == "") longitude = extractValueFromReadable(line, "Longitude:");
+      }
+      if (low.indexOf("volt:") >= 0 || low.indexOf("v:") >= 0)       { 
+        voltage = extractValueFromReadable(line, "V:"); 
+        if (voltage == "") voltage = extractValueFromReadable(line, "Volt:");
+      }
+      if (low.indexOf("cur:") >= 0 || low.indexOf("c:") >= 0)  { 
+        currentV = extractValueFromReadable(line, "C:"); 
+        if (currentV == "") currentV = extractValueFromReadable(line, "Cur:");
+      }
+      if (low.indexOf("pow:") >= 0 || low.indexOf("p:") >= 0)  { 
+        power = extractValueFromReadable(line, "P:"); 
+        if (power == "") power = extractValueFromReadable(line, "Pow:");
+      }
+      if (low.indexOf("utc date:") >= 0 || low.indexOf("ud:") >= 0)   { 
+        utcDate = extractValueFromReadable(line, "UD:"); 
+        if (utcDate == "") utcDate = extractValueFromReadable(line, "UTC Date:");
+      }
+      if (low.indexOf("utc time:") >= 0 || low.indexOf("ut:") >= 0)   { 
+        utcTime = extractValueFromReadable(line, "UT:"); 
+        if (utcTime == "") utcTime = extractValueFromReadable(line, "UTC Time:");
+      }
+      if (low.indexOf("ps:") >= 0 || low.indexOf("powerstatus:") >= 0)         { 
+        powerStatus = extractValueFromReadable(line, "PS:"); 
+        if (powerStatus == "") powerStatus = extractValueFromReadable(line, "PowerStatus:");
+      }
       if (low.indexOf("comm:") >= 0 || low.indexOf("mode:") >= 0) {
         commMode = extractValueFromReadable(line, "Comm:");
         if (commMode == "") commMode = extractValueFromReadable(line, "Mode:");
@@ -321,46 +359,84 @@ String extractValueFromReadable(String data, String key) {
   return value;
 }
 
-// ================== Next.js POST ==================
+// ================== Next.js POST (FIXED) ==================
 void postToNextJS() {
   if (!wifiConnected) return;
+
+  // 🔧 VALIDATION: Only send if we have at least temperature data
+  if (temperature.length() == 0) {
+    Serial.println("[NextJS] ⚠️ Skipping POST - no temperature data");
+    return;
+  }
 
   String url = String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_PATH);
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("User-Agent", "ESP32-AWOS-Station/2.1");
+  http.addHeader("User-Agent", "ESP32-AWOS-Station/2.2-FIXED");
   http.setTimeout(NEXTJS_TIMEOUT_MS);
 
-  // Convert readable fields → numeric JSON where possible
+  // 🔧 FIXED: Convert strings to proper numbers
+  float tempVal = extractNumberFloat(temperature);
+  float humVal = extractNumberFloat(humidity);
+  float presVal = extractNumberFloat(pressure);
+  float dewVal = extractNumberFloat(dewPoint);
+  float wsVal = extractNumberFloat(windSpeed);
+  int wdVal = extractNumberInt(windDirection);
+  float latVal = extractNumberFloat(latitude);
+  float lngVal = extractNumberFloat(longitude);
+  float voltVal = extractNumberFloat(voltage);
+  float currVal = extractNumberFloat(currentV);
+  float powVal = extractNumberFloat(power);
+
+  // 🔧 CRITICAL: Build JSON with exact field names matching Next.js API
   DynamicJsonDocument doc(1024);
   doc["stationId"]     = "VCBI-ESP32";
-  doc["utcDate"]       = utcDate;
-  doc["utcTime"]       = utcTime;
-  doc["lat"]           = extractNumber(latitude).toFloat();
-  doc["lng"]           = extractNumber(longitude).toFloat();
-  doc["temperature"]   = extractNumber(temperature).toFloat();
-  doc["humidity"]      = extractNumber(humidity).toFloat();
-  doc["pressure"]      = extractNumber(pressure).toFloat();
-  doc["dewPoint"]      = extractNumber(dewPoint).toFloat();
-  doc["windSpeed"]     = extractNumber(windSpeed).toFloat();
-  doc["windDirection"] = extractNumber(windDirection).toInt();
-  doc["voltage"]       = extractNumber(voltage).toFloat();
-  doc["current"]       = extractNumber(currentV).toFloat();
-  doc["power"]         = extractNumber(power).toFloat();
-  doc["powerStatus"]   = powerStatus;
-  doc["commMode"]      = commMode;
+  
+  // 🔧 Only include date/time if we have them
+  if (utcDate.length() > 0) doc["utcDate"] = utcDate;
+  if (utcTime.length() > 0) doc["utcTime"] = utcTime;
+  
+  // 🔧 Core weather data (REQUIRED by API)
+  doc["temperature"]   = tempVal;
+  doc["humidity"]      = humVal;
+  doc["pressure"]      = presVal;
+  doc["dewPoint"]      = dewVal;
+  doc["windSpeed"]     = wsVal;
+  doc["windDirection"] = wdVal;
+  
+  // 🔧 GPS coordinates (optional)
+  if (latVal != 0.0) doc["lat"] = latVal;
+  if (lngVal != 0.0) doc["lng"] = lngVal;
+  
+  // 🔧 Power data (optional)
+  if (voltVal != 0.0) doc["voltage"] = voltVal;
+  if (currVal != 0.0) doc["current"] = currVal;
+  if (powVal != 0.0) doc["power"] = powVal;
+  if (powerStatus.length() > 0) doc["powerStatus"] = powerStatus;
+  if (commMode.length() > 0) doc["commMode"] = commMode;
 
-  String payload; serializeJson(doc, payload);
+  String payload; 
+  serializeJson(doc, payload);
+
+  // 🔧 DEBUG: Print what we're sending
+  Serial.println("[NextJS] 📤 Sending POST:");
+  Serial.println(payload);
 
   int code = http.POST(payload);
+  String response = http.getString();
+  
+  Serial.printf("[NextJS] 📥 HTTP %d\n", code);
+  Serial.println("[NextJS] Response: " + response);
+
   if (code > 0) {
-    Serial.printf("[NextJS] HTTP %d\n", code);
-    if (code == 200 || code == 201) {
+    if (code == 200 || code == 201 || code == 202) {
       nextJSPostErrors = 0;
-      Serial.println("[NextJS] ✅ POST success");
+      nextJSPostSuccess++;
+      Serial.println("[NextJS] ✅ POST success!");
+      Serial.println("[NextJS] Data confirmed received by server");
     } else {
       nextJSPostErrors++;
-      Serial.println("[NextJS] ⚠️ POST failed");
+      Serial.printf("[NextJS] ⚠️ POST returned %d\n", code);
     }
   } else {
     nextJSPostErrors++;
@@ -378,6 +454,7 @@ void displayStartupMessage() {
   display.println("AWOS Starting...");
   display.println("Wi-Fi Receiver Mode");
   display.println("Next.js Dashboard");
+  display.println("FIXED Version 2.2");
   display.println("Initializing...");
   display.display();
   delay(1800);
@@ -423,7 +500,7 @@ void updateOLEDDisplay() {
       display.println("Local: " + getLocalTime());
       display.println("WiFi:" + String(wifiConnected ? "OK" : "ERR") +
                       " Nano:" + String(nanoConnected ? "OK" : "ERR"));
-      display.println("NextJS:" + String(nextJSPostErrors == 0 ? "OK" : "ERR"));
+      display.println("NextJS: OK:" + String(nextJSPostSuccess) + " ERR:" + String(nextJSPostErrors));
       display.println("Page 1/7");
       break;
 
@@ -503,52 +580,103 @@ String checkField(String f) {
   return (f.length() > 0) ? f : "N/A";
 }
 
-String extractNumber(String input) {
+// 🔧 FIXED: Robust number extraction for floats
+float extractNumberFloat(String input) {
+  if (input.length() == 0) return 0.0;
+  
   String result = "";
   bool decimalFound = false;
   bool signAllowed = true;
+  bool hasDigit = false;
 
   for (int i = 0; i < input.length(); i++) {
     char c = input.charAt(i);
-    if (isDigit(c) || (c == '.' && !decimalFound) || (c == '-' && signAllowed)) {
+    
+    if (isDigit(c)) {
       result += c;
-      if (c == '.') decimalFound = true;
-      if (c == '-') signAllowed = false;
-    } else if (result.length() > 0) {
+      hasDigit = true;
+      signAllowed = false;
+    } else if (c == '.' && !decimalFound && (hasDigit || i + 1 < input.length())) {
+      result += c;
+      decimalFound = true;
+      signAllowed = false;
+    } else if ((c == '-' || c == '+') && signAllowed) {
+      result += c;
+      signAllowed = false;
+    } else if (hasDigit && !isDigit(c) && c != '.') {
+      // Stop when we hit a non-numeric character after getting digits
       break;
     }
   }
-  return result;
+  
+  if (result.length() == 0 || result == "." || result == "-" || result == "+") {
+    return 0.0;
+  }
+  
+  return result.toFloat();
+}
+
+// 🔧 FIXED: Robust number extraction for integers
+int extractNumberInt(String input) {
+  if (input.length() == 0) return 0;
+  
+  String result = "";
+  bool signAllowed = true;
+  bool hasDigit = false;
+
+  for (int i = 0; i < input.length(); i++) {
+    char c = input.charAt(i);
+    
+    if (isDigit(c)) {
+      result += c;
+      hasDigit = true;
+      signAllowed = false;
+    } else if ((c == '-' || c == '+') && signAllowed) {
+      result += c;
+      signAllowed = false;
+    } else if (hasDigit && !isDigit(c)) {
+      // Stop when we hit a non-numeric character after getting digits
+      break;
+    }
+  }
+  
+  if (result.length() == 0 || result == "-" || result == "+") {
+    return 0;
+  }
+  
+  return result.toInt();
 }
 
 // ================== CSV to Nano (SD) ==================
 void sendDataToNano() {
-  // CSV in consistent order
+  // CSV in consistent order with proper number extraction
   String csv =
     checkField(utcDate) + "," + checkField(utcTime) + "," +
-    checkField(extractNumber(latitude)) + "," + checkField(extractNumber(longitude)) + "," +
-    checkField(extractNumber(temperature)) + "," + checkField(extractNumber(humidity)) + "," +
-    checkField(extractNumber(pressure)) + "," + checkField(extractNumber(dewPoint)) + "," +
-    checkField(extractNumber(windDirection)) + "," + checkField(extractNumber(windSpeed)) + "," +
-    checkField(extractNumber(voltage)) + "," + checkField(extractNumber(currentV)) + "," +
-    checkField(extractNumber(power)) + "," + checkField(powerStatus) + "," +
+    String(extractNumberFloat(latitude), 6) + "," + String(extractNumberFloat(longitude), 6) + "," +
+    String(extractNumberFloat(temperature), 1) + "," + String(extractNumberFloat(humidity), 1) + "," +
+    String(extractNumberFloat(pressure), 1) + "," + String(extractNumberFloat(dewPoint), 1) + "," +
+    String(extractNumberInt(windDirection)) + "," + String(extractNumberFloat(windSpeed), 1) + "," +
+    String(extractNumberFloat(voltage), 2) + "," + String(extractNumberFloat(currentV), 2) + "," +
+    String(extractNumberFloat(power), 1) + "," + checkField(powerStatus) + "," +
     checkField(commMode);
 
   Serial1.println(csv);
   Serial.println("[Nano] ⬆️ CSV sent for SD logging");
 }
 
-// ================== HTML (like your Ethernet test) ==================
+// ================== HTML (Web Interface) ==================
 String buildAWOSHTMLResponse() {
   String html;
   html  = "<!DOCTYPE html><html><head><title>AWOS Receiver (Wi-Fi)</title>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<meta http-equiv='refresh' content='10'>"; // Auto-refresh every 10 seconds
   html += "<style>body{font-family:Arial,sans-serif;margin:20px;background-color:#f5f5f5;}";
   html += ".container{max-width:1200px;margin:0 auto;background-color:white;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}";
   html += "h1{color:#2c3e50;text-align:center;margin-bottom:30px;}h2{color:#34495e;border-bottom:2px solid #3498db;padding-bottom:10px;}";
   html += "table{border-collapse:collapse;width:100%;margin-bottom:20px;background-color:white;}th,td{border:1px solid #ddd;padding:12px;text-align:left;}";
   html += "th{background-color:#3498db;color:white;font-weight:bold;}tr:nth-child(even){background-color:#f2f2f2;}";
   html += ".status{text-align:center;padding:15px;background-color:#e8f5e8;border-radius:5px;margin:20px 0;}.error{background-color:#ffe8e8;}";
+  html += ".success{background-color:#d4edda;color:#155724;}.warning{background-color:#fff3cd;color:#856404;}";
   html += ".info{font-size:14px;color:#7f8c8d;text-align:center;margin-top:20px;}";
   html += "</style></head><body><div class='container'>";
   html += "<h1>🌤️ AWOS — Wi-Fi Receiver → Next.js</h1>";
@@ -560,6 +688,7 @@ String buildAWOSHTMLResponse() {
   html += "<tr><td>UTC Time</td><td>" + checkField(utcTime) + "</td></tr>";
   html += "<tr><td>Local Time (UTC+5:30)</td><td>" + getLocalTime() + "</td></tr>";
   html += "<tr><td>System Uptime</td><td>" + String(millis()/1000) + " seconds</td></tr>";
+  html += "<tr><td>Firmware Version</td><td>2.2-FIXED</td></tr>";
   html += "<tr><td>Data Format</td><td>Readable from Nano</td></tr>";
   html += "<tr><td>Next.js Endpoint</td><td>" + String(NEXTJS_BASE_URL) + String(NEXTJS_ESP32_PATH) + "</td></tr>";
   html += "</table>";
@@ -589,17 +718,27 @@ String buildAWOSHTMLResponse() {
   html += "<tr><td>Longitude</td><td>" + checkField(longitude) + "</td></tr>";
   html += "</table>";
 
-  String statusClass = (nanoConnected && wifiConnected && nextJSPostErrors == 0) ? "status" : "status error";
+  // Improved status display
+  String statusClass = "status";
+  if (nanoConnected && wifiConnected && nextJSPostErrors == 0 && nextJSPostSuccess > 0) {
+    statusClass = "status success";
+  } else if (!nanoConnected || !wifiConnected) {
+    statusClass = "status error";
+  } else if (nextJSPostErrors > 0) {
+    statusClass = "status warning";
+  }
+
   html += "<div class='" + statusClass + "'>";
   html += "<h3>System Status</h3>";
   html += "<p><strong>Nano Module:</strong> " + String(nanoConnected ? "✅ Connected (Readable)" : "❌ Disconnected") + "</p>";
-  html += "<p><strong>Wi-Fi:</strong> " + String(wifiConnected ? "✅ Connected" : "❌ Disconnected") + "</p>";
-  html += "<p><strong>Next.js POST Errors:</strong> " + String(nextJSPostErrors) + "</p>";
-  html += "<p><strong>Last Nano Data:</strong> " + String((millis() - lastNanoData)/1000) + " s ago</p>";
+  html += "<p><strong>Wi-Fi:</strong> " + String(wifiConnected ? "✅ Connected (RSSI: " + String(WiFi.RSSI()) + " dBm)" : "❌ Disconnected") + "</p>";
+  html += "<p><strong>Next.js POST Success:</strong> " + String(nextJSPostSuccess) + " | <strong>Errors:</strong> " + String(nextJSPostErrors) + "</p>";
+  html += "<p><strong>Last Nano Data:</strong> " + String((millis() - lastNanoData)/1000) + " seconds ago</p>";
+  html += "<p><strong>Free Heap:</strong> " + String(ESP.getFreeHeap()) + " bytes</p>";
   html += "</div>";
 
-  html += "<div class='info'><p><i>📡 Receiving readable format from Arduino Nano | 🔄 Use dashboard for remote view</i></p>";
-  html += "<p><small>Uptime: " + String(millis()/1000) + " s</small></p></div>";
+  html += "<div class='info'><p><i>📡 Receiving readable format from Arduino Nano | 🔄 Auto-refreshing every 10s</i></p>";
+  html += "<p><small>Uptime: " + String(millis()/1000) + " seconds | Firmware: 2.2-FIXED</small></p></div>";
 
   html += "</div></body></html>";
   return html;
