@@ -390,7 +390,7 @@ void postToNextJS() {
 
   // 🔧 CRITICAL: Build JSON with exact field names matching Next.js API
   DynamicJsonDocument doc(1024);
-  doc["stationId"]     = "VCBI-ESP32";
+  doc["stationId"]     = "VCBI";  // 🔧 FIXED: Use standard ID without -ESP32 suffix
   
   // 🔧 Only include date/time if we have them
   if (utcDate.length() > 0) doc["utcDate"] = utcDate;

@@ -412,19 +412,37 @@ export function useRealtimeSensorData(runway: string) {
 
         console.log('🔄 Setting up real-time subscription for runway:', runway);
 
-        // Create channel for real-time updates
+        // 🔧 FIX: Listen to ALL inserts, filter in callback for flexibility
+        // This allows matching "VCBI", "VCBI-ESP32", etc.
         const channel = supabase
-            .channel(`sensor-readings-${runway}`)
+            .channel(`sensor-readings-all`)
             .on(
                 'postgres_changes',
                 {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'sensor_readings',
-                    filter: `station_id=eq.${runway}`
+                    // No filter - receive ALL inserts, filter in callback
                 },
                 (payload) => {
+                    const reading = payload.new as any;
+                    
+                    // 🔧 Check if station_id matches any variation
+                    const variations = [
+                        runway,
+                        `${runway}-ESP32`,
+                        runway.replace('-ESP32', ''),
+                        'VCBI',
+                        'VCBI-ESP32'
+                    ];
+                    
+                    if (!variations.includes(reading.station_id)) {
+                        // Ignore inserts from other stations
+                        return;
+                    }
+                    
                     console.log('🔴 REALTIME UPDATE RECEIVED for', runway, ':', payload);
+                    console.log('🔴 Matching station_id:', reading.station_id);
                     console.log('🔴 Payload new data:', payload.new);
 
                     if (payload.new) {
