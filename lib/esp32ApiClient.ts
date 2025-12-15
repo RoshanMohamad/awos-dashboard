@@ -3,13 +3,20 @@
 import type { SensorData, Alert } from "./websocket"
 
 export class ESP32ApiClient {
+  private esp32BaseUrl: string
+  private serverBaseUrl: string
+
   constructor(
-    private baseUrl = "http://192.168.4.177", // ESP32 IP Address
-  ) { }
+    esp32Url = "http://192.168.4.177", // ESP32 IP Address
+    serverUrl = typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000" // Next.js server
+  ) {
+    this.esp32BaseUrl = esp32Url
+    this.serverBaseUrl = serverUrl
+  }
 
   async getCurrentData(runway: string): Promise<SensorData | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/current/${runway}`)
+      const response = await fetch(`${this.serverBaseUrl}/api/current/${runway}`)
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
       return await response.json()
     } catch (error) {
@@ -20,7 +27,7 @@ export class ESP32ApiClient {
 
   async getHistoricalData(runway: string, days = 30): Promise<SensorData[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/history/${runway}?days=${days}`)
+      const response = await fetch(`${this.serverBaseUrl}/api/history/${runway}?days=${days}`)
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`)
       return await response.json()
     } catch (error) {

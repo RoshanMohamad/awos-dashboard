@@ -178,7 +178,7 @@ export function RealTimeDebugPanel() {
                         {recentData.map((row, idx) => (
                           <tr key={idx} className="border-t">
                             <td className="p-2 font-medium">{row.station_id}</td>
-                            <td className="p-2">{new Date(row.timestamp).toLocaleTimeString()}</td>
+                            <td className="p-2">{new Date(row.timestamp).toISOString().split('T')[1].substring(0, 8)} UTC</td>
                             <td className="p-2">{row.temperature}°C</td>
                             <td className="p-2">{row.humidity}%</td>
                             <td className="p-2">{row.pressure} hPa</td>
@@ -195,7 +195,7 @@ export function RealTimeDebugPanel() {
 
               {lastRefresh && (
                 <div className="text-xs text-gray-500">
-                  Last refreshed: {lastRefresh.toLocaleTimeString()}
+                  Last refreshed: {lastRefresh.toISOString().split('T')[1].substring(0, 8)} UTC
                 </div>
               )}
             </div>

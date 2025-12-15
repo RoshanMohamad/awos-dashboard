@@ -284,31 +284,37 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
                 </CardHeader>
                 <CardContent className="space-y-2 lg:space-y-3 flex-1 p-2 lg:p-3">
                   <div className="flex-1 flex flex-col justify-center space-y-3">
-                    {/* Battery Level Display */}
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-semibold text-slate-700">Battery Level</span>
-                        <span className="text-xl font-bold text-blue-600">{weatherData.batteryLevel}%</span>
-                      </div>
-                      <div className="relative w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                        <div
-                          className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-700 ease-out"
-                          style={{ width: `${weatherData.batteryLevel}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Power Status Grid */}
+                    {/* Power Source Status */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                        <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${weatherData.batteryPower ? 'bg-blue-500' : 'bg-slate-300'}`}></div>
-                        <span className="text-xs font-medium text-slate-600">Battery</span>
-                        <div className="text-xs text-slate-500">{weatherData.batteryPower ? 'ON' : 'OFF'}</div>
+                      <div className={`p-4 rounded-xl border-2 text-center transition-all ${
+                        weatherData.batteryPower 
+                          ? 'bg-blue-50 border-blue-500' 
+                          : 'bg-slate-50 border-slate-300'
+                      }`}>
+                        <div className={`w-8 h-8 rounded-full mx-auto mb-2 ${
+                          weatherData.batteryPower ? 'bg-blue-500' : 'bg-slate-300'
+                        }`}></div>
+                        <span className="block text-sm font-semibold text-slate-700">Battery</span>
+                        <div className={`text-xs font-medium mt-1 ${
+                          weatherData.batteryPower ? 'text-blue-600' : 'text-slate-500'
+                        }`}>
+                          {weatherData.batteryPower ? 'Active' : 'Inactive'}
+                        </div>
                       </div>
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                        <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${weatherData.cebPower ? 'bg-green-500' : 'bg-slate-300'}`}></div>
-                        <span className="text-xs font-medium text-slate-600">Grid</span>
-                        <div className="text-xs text-slate-500">{weatherData.cebPower ? 'ON' : 'OFF'}</div>
+                      <div className={`p-4 rounded-xl border-2 text-center transition-all ${
+                        weatherData.cebPower 
+                          ? 'bg-green-50 border-green-500' 
+                          : 'bg-slate-50 border-slate-300'
+                      }`}>
+                        <div className={`w-8 h-8 rounded-full mx-auto mb-2 ${
+                          weatherData.cebPower ? 'bg-green-500' : 'bg-slate-300'
+                        }`}></div>
+                        <span className="block text-sm font-semibold text-slate-700">Grid Power</span>
+                        <div className={`text-xs font-medium mt-1 ${
+                          weatherData.cebPower ? 'text-green-600' : 'text-slate-500'
+                        }`}>
+                          {weatherData.cebPower ? 'Connected' : 'Disconnected'}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -515,7 +521,7 @@ export function LiveDashboard({ runway }: LiveDashboardProps) {
 
         {/* Compact Status Footer */}
         <div className="flex-shrink-0 text-center py-1 text-slate-500 text-xs">
-          Last updated: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : 'Never'} | Humidity: {weatherData.humidity}% | Dew Point: {weatherData.dewPoint}°C
+          Last updated: {lastUpdate ? new Date(lastUpdate).toISOString().split('T')[1].slice(0, 8) + ' UTC' : 'Never'} | Humidity: {weatherData.humidity}% | Dew Point: {weatherData.dewPoint}°C
         </div>
       </div>
     </div>

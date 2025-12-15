@@ -91,7 +91,7 @@ export default function Navbar() {
                     UTC Time
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {currentTime ? currentTime.toUTCString().split(" ").slice(1, 4).join(" ") : "-- --- ----"}
+                    {currentTime ? currentTime.toISOString().replace('T', ' ').split('.')[0] + ' UTC' : "-- --- ---- --:--:-- UTC"}
                   </div>
                 </div>
               </div>

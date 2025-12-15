@@ -35,9 +35,9 @@ export class ExportUtils {
     csvContent += `Runway,${metadata.runway}\n`;
     csvContent += `Date Range,${metadata.dateFrom || ''} - ${metadata.dateTo || ''}\n`;
     csvContent += `Generated,${metadata.generated}\n\n`;
-    
+
     csvContent += headers.join(',') + '\n';
-    
+
     data.forEach(row => {
       csvContent += [
         row.timestamp,
@@ -69,9 +69,9 @@ export class ExportUtils {
     excelContent += `Runway\t${metadata.runway}\n`;
     excelContent += `Date Range\t${metadata.dateFrom || ''} - ${metadata.dateTo || ''}\n`;
     excelContent += `Generated\t${metadata.generated}\n\n`;
-    
+
     excelContent += headers.join('\t') + '\n';
-    
+
     data.forEach(row => {
       excelContent += [
         row.timestamp,
@@ -83,8 +83,8 @@ export class ExportUtils {
       ].join('\t') + '\n';
     });
 
-    return new Blob([excelContent], { 
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    return new Blob([excelContent], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
   }
 
@@ -130,8 +130,8 @@ export class ExportUtils {
       }))
     };
 
-    return new Blob([JSON.stringify(exportData, null, 2)], { 
-      type: 'application/json;charset=utf-8;' 
+    return new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json;charset=utf-8;'
     });
   }
 
@@ -167,7 +167,7 @@ export class ExportUtils {
         <div><strong>Report Type:</strong> ${metadata.type}</div>
         <div><strong>Runway:</strong> ${metadata.runway}</div>
         <div><strong>Date Range:</strong> ${metadata.dateFrom || 'N/A'} - ${metadata.dateTo || 'N/A'}</div>
-        <div><strong>Generated:</strong> ${new Date(metadata.generated).toLocaleString()}</div>
+        <div><strong>Generated:</strong> ${new Date(metadata.generated).toUTCString()}</div>
     </div>
 
     <table>
@@ -184,7 +184,7 @@ export class ExportUtils {
         <tbody>
             ${data.map(row => `
                 <tr>
-                    <td>${new Date(row.timestamp).toLocaleString()}</td>
+                    <td>${new Date(row.timestamp).toUTCString()}</td>
                     <td>${row.temperature.toFixed(1)}</td>
                     <td>${row.humidity.toFixed(1)}</td>
                     <td>${row.pressure.toFixed(1)}</td>

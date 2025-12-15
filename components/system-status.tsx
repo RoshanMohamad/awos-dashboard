@@ -292,18 +292,13 @@ export function SystemStatus({ className = "" }: SystemStatusProps) {
         <CardContent>
           <div className="text-center space-y-2">
             <div className="text-3xl font-mono font-bold text-gray-800">
-              {currentTime.toLocaleTimeString()}
+              {currentTime.toISOString().split('T')[1].split('.')[0]} UTC
             </div>
             <div className="text-sm text-gray-600">
-              {currentTime.toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {currentTime.toUTCString().split(' ').slice(0, 4).join(' ')}
             </div>
             <div className="text-xs text-gray-500">
-              Local Time (UTC+5:30) • Synchronized with NTP
+              UTC Time • Synchronized with NTP
             </div>
             <div className="pt-2">
               <Badge

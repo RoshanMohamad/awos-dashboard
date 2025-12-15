@@ -53,8 +53,6 @@ export function Dashboard() {
       </div>
 
       <main className="flex-1 overflow-hidden w-full">
-        {/* Header Bar */}
-
         {activeTab === "live" ? (
           <LiveDashboard runway={getStationId(selectedRunway)} />
         ) : (

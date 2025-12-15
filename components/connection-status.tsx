@@ -93,7 +93,7 @@ export function ConnectionStatus() {
         </div>
 
         <div className="text-xs text-gray-500">
-          Last heartbeat: {new Date(systemStatus.lastHeartbeat).toLocaleString()}
+          Last heartbeat: {new Date(systemStatus.lastHeartbeat).toISOString().replace('T', ' ').split('.')[0] + ' UTC'}
         </div>
       </CardContent>
     </Card>

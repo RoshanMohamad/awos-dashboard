@@ -70,12 +70,12 @@ export function HistoricalTrends() {
                   <XAxis
                     dataKey="date"
                     tickFormatter={(value) =>
-                      new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      new Date(value).toUTCString().split(' ').slice(1, 3).join(' ')
                     }
                   />
                   <YAxis label={{ value: chart.unit, angle: -90, position: "insideLeft" }} />
                   <Tooltip
-                    labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                    labelFormatter={(value) => new Date(value).toUTCString().split(' ').slice(0, 4).join(' ')}
                     formatter={(value: number) => [`${value.toFixed(1)} ${chart.unit}`, chart.title]}
                   />
                   <Line type="monotone" dataKey={chart.dataKey} stroke={chart.color} strokeWidth={2} dot={false} />

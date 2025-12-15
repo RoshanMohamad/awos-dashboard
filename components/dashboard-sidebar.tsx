@@ -17,6 +17,7 @@ import {
   FileText,
   Monitor,
   Info,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,6 @@ export function Sidebar({
   const router = useRouter();
   const [openRunways, setOpenRunways] = useState<Record<string, boolean>>({
     "02": true,
-    "04": false,
   });
 
   const toggleRunway = (runway: string) => {
@@ -88,115 +88,22 @@ export function Sidebar({
       {/* Navigation */}
       <div className="flex-1 bg-transparent">
         <div className="p-4 space-y-2">
-          {/* Runway 02 End */}
-          <div className="rounded bg-sidebar-accent/50">
-            <Collapsible
-              open={openRunways["02"]}
-              onOpenChange={() => toggleRunway("02")}
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 h-auto text-left"
-                >
-                  {openRunways["02"] ? (
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 mr-2" />
-                  )}
-                  <div className="font-medium text-sidebar-foreground">
-                    Runway 02 End
-                  </div>
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="ml-6 space-y-1 pb-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-sm",
-                    selectedRunway === "02" &&
-                      activeTab === "live" &&
-                      "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
-                  )}
-                  onClick={() => handleTabClick("02", "live")}
-                >
-                  ▶ Live Dashboard
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-sm",
-                    selectedRunway === "02" &&
-                      activeTab === "forecast" &&
-                      "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
-                  )}
-                  onClick={() => handleTabClick("02", "forecast")}
-                >
-                  ▶ Forecast & History
-                </Button>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-
-          {/* Runway 04 End */}
-          <div className="rounded bg-sidebar-accent/50">
-            <Collapsible
-              open={openRunways["04"]}
-              onOpenChange={() => toggleRunway("04")}
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start p-3 h-auto text-left"
-                >
-                  {openRunways["04"] ? (
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 mr-2" />
-                  )}
-                  <div className="font-medium text-sidebar-foreground">
-                    Runway 04 End
-                  </div>
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="ml-6 space-y-1 pb-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-sm",
-                    selectedRunway === "04" &&
-                      activeTab === "live" &&
-                      "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
-                  )}
-                  onClick={() => handleTabClick("04", "live")}
-                >
-                  ▶ Live Dashboard
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-sm",
-                    selectedRunway === "04" &&
-                      activeTab === "forecast" &&
-                      "bg-sidebar-primary text-sidebar-primary-foreground font-semibold"
-                  )}
-                  onClick={() => handleTabClick("04", "forecast")}
-                >
-                  ▶ Forecast & History
-                </Button>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-
           {/* System Pages */}
           <div className="mt-4 space-y-1">
             <h3 className="text-xs font-semibold text-sidebar-foreground uppercase tracking-wide px-3 py-2">
               System
             </h3>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm"
+              onClick={() => {
+                router.push("/dashboard");
+                onClose();
+              }}
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Return to Dashboard
+            </Button>
 
             <Button
               variant="ghost"
