@@ -21,11 +21,57 @@ import {
   CheckCircle,
   Clock,
   Zap,
+  CircleDot,
 } from "lucide-react";
 
 interface SystemStatusProps {
   className?: string;
 }
+
+const sensorThresholds = [
+  {
+    sensor: "Temperature",
+    unit: "°C",
+    normal: { min: "26.0", max: "31.5" },
+    warning: { min: "24.5", max: "32.5" },
+    critical: { min: "23.0", max: "34.0" },
+  },
+  {
+    sensor: "Humidity",
+    unit: "%",
+    normal: { min: "65", max: "85" },
+    warning: { min: "58", max: "92" },
+    critical: { min: "50", max: "96" },
+  },
+  {
+    sensor: "Pressure",
+    unit: "hPa",
+    normal: { min: "1008.0", max: "1011.5" },
+    warning: { min: "1006.0", max: "1013.0" },
+    critical: { min: "1004.0", max: "1015.0" },
+  },
+  {
+    sensor: "Wind Speed",
+    unit: "m/s",
+    normal: { min: "4.0", max: "14.0" },
+    warning: { min: "2.0", max: "16.0" },
+    critical: { min: "0.5", max: "20.0" },
+  },
+  {
+    sensor: "Wind Direction",
+    unit: "°",
+    normal: { min: "0", max: "360" },
+    warning: { min: "0", max: "360" },
+    critical: { min: "Invalid", max: "Invalid" },
+  },
+  {
+    sensor: "Dew Point",
+    unit: "°C",
+    normal: { min: "23.5", max: "25.5" },
+    warning: { min: "22.0", max: "26.5" },
+    critical: { min: "20.0", max: "28.0" },
+  },
+];
 
 export function SystemStatus({ className = "" }: SystemStatusProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -274,6 +320,85 @@ export function SystemStatus({ className = "" }: SystemStatusProps) {
                 </Button>
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Threshold Reference */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <span>Threshold Reference</span>
+          </CardTitle>
+          <CardDescription>
+            Normalized ranges that drive the health option alerts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 text-xs font-semibold text-gray-600">
+                  <th className="px-3 py-2 text-left uppercase tracking-wide">Sensor</th>
+                  <th className="px-3 py-2 text-left uppercase tracking-wide">Unit</th>
+                  <th className="px-3 py-2 text-center uppercase tracking-wide">Normal Min</th>
+                  <th className="px-3 py-2 text-center uppercase tracking-wide">Normal Max</th>
+                  <th className="px-3 py-2 text-center uppercase tracking-wide">
+                    <span className="flex items-center justify-center gap-1 text-amber-700">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Warning Low
+                    </span>
+                  </th>
+                  <th className="px-3 py-2 text-center uppercase tracking-wide">
+                    <span className="flex items-center justify-center gap-1 text-amber-700">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Warning High
+                    </span>
+                  </th>
+                  <th className="px-3 py-2 text-center uppercase tracking-wide">
+                    <span className="flex items-center justify-center gap-1 text-red-700">
+                      <CircleDot className="h-3.5 w-3.5" />
+                      Critical Low
+                    </span>
+                  </th>
+                  <th className="px-3 py-2 text-center uppercase tracking-wide">
+                    <span className="flex items-center justify-center gap-1 text-red-700">
+                      <CircleDot className="h-3.5 w-3.5" />
+                      Critical High
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sensorThresholds.map((entry) => (
+                  <tr key={entry.sensor} className="border-b last:border-0">
+                    <td className="px-3 py-2 font-medium text-gray-900">
+                      {entry.sensor}
+                    </td>
+                    <td className="px-3 py-2 text-gray-600">{entry.unit}</td>
+                    <td className="px-3 py-2 text-center text-gray-800">
+                      {entry.normal.min}
+                    </td>
+                    <td className="px-3 py-2 text-center text-gray-800">
+                      {entry.normal.max}
+                    </td>
+                    <td className="px-3 py-2 text-center text-amber-700">
+                      {entry.warning.min}
+                    </td>
+                    <td className="px-3 py-2 text-center text-amber-700">
+                      {entry.warning.max}
+                    </td>
+                    <td className="px-3 py-2 text-center text-red-700">
+                      {entry.critical.min}
+                    </td>
+                    <td className="px-3 py-2 text-center text-red-700">
+                      {entry.critical.max}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
